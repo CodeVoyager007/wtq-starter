@@ -105,3 +105,44 @@ FACTS_SCHEMA = {
     },
     "required": ["charges", "taxes", "late_payment_amounts"],
 }
+
+# Full transcription: everything printed, so Level 2 can answer any question and
+# Level 1 numbers can be cross-checked against an independent reading.
+TRANSCRIPT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "sections": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {"label": {"type": "string"}, "value": {"type": "string"}},
+                            "required": ["label", "value"],
+                        },
+                    },
+                },
+                "required": ["name", "items"],
+            },
+        },
+        "tables": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "columns": {"type": "array", "items": {"type": "string"}},
+                    "rows": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}},
+                },
+                "required": ["name", "columns", "rows"],
+            },
+        },
+        "messages_in_english": {"type": "array", "items": {"type": "string"}},
+        "unreadable_or_covered": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["sections", "tables", "messages_in_english"],
+}

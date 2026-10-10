@@ -1,6 +1,8 @@
 """Level 1: one bill image -> checked Level 1 JSON plus facts for Level 2.
 
-Flow: extract (1 model call) -> normalize -> validate -> repair once if checks fail.
+Flow: extract (1 call) + full transcription (1 call, independent second reading)
+-> normalize -> arithmetic checks + cross-check against the transcript
+-> repair once (with the transcript as evidence) if anything fails.
 The version with fewer failed checks wins; ties keep the first reading.
 """
 from __future__ import annotations
@@ -9,8 +11,8 @@ import logging
 from dataclasses import dataclass, field
 
 from . import normalize, prompts, validate
-from .llm import Client, Image
-from .schema import FACTS_SCHEMA
+from .llm import Client, Image, LLMError
+from .schema import FACTS_SCHEMA, TRANSCRIPT_SCHEMA
 
 log = logging.getLogger(__name__)
 
@@ -31,21 +33,42 @@ def extract_bill(client: Client, bill_id: str, image: Image) -> Extraction:
         system=prompts.EXTRACT_SYSTEM, prompt=prompts.extract_prompt(provider),
         image=image, schema=FACTS_SCHEMA, tag=f"{bill_id}.extract",
     )
-    level1 = normalize.to_level1(raw, bill_id)
-    issues = validate.check(level1)
+    transcript = transcribe(client, bill_id, provider, image)
+
+    def checked(reading: dict) -> tuple[dict, list[str]]:
+        level1 = normalize.to_level1(reading, bill_id)
+        return level1, validate.check(level1) + validate.cross_check(level1, transcript)
+
+    def result(reading: dict, level1: dict, issues: list[str], repaired: bool = False) -> Extraction:
+        facts = normalize.clean_facts(reading, bill_id)
+        facts["transcript"] = transcript
+        return Extraction(bill_id, level1, facts, issues, repaired)
+
+    level1, issues = checked(raw)
     if not issues:
-        return Extraction(bill_id, level1, normalize.clean_facts(raw, bill_id))
+        return result(raw, level1, issues)
 
     log.info("%s: %d check(s) failed, asking the model to re-read: %s", bill_id, len(issues), issues)
     repaired_raw = client.generate_json(
-        system=prompts.EXTRACT_SYSTEM, prompt=prompts.repair_prompt(provider, raw, issues),
+        system=prompts.EXTRACT_SYSTEM, prompt=prompts.repair_prompt(provider, raw, issues, transcript),
         image=image, schema=FACTS_SCHEMA, tag=f"{bill_id}.repair",
     )
-    repaired = normalize.to_level1(repaired_raw, bill_id)
-    repaired_issues = validate.check(repaired)
+    repaired, repaired_issues = checked(repaired_raw)
     if len(repaired_issues) < len(issues):
-        return Extraction(bill_id, repaired, normalize.clean_facts(repaired_raw, bill_id), repaired_issues, True)
-    return Extraction(bill_id, level1, normalize.clean_facts(raw, bill_id), issues)
+        return result(repaired_raw, repaired, repaired_issues, repaired=True)
+    return result(raw, level1, issues)
+
+
+def transcribe(client: Client, bill_id: str, provider: str | None, image: Image) -> dict | None:
+    """Full independent reading of the bill. Optional: extraction still works without it."""
+    try:
+        return client.generate_json(
+            system=prompts.TRANSCRIBE_SYSTEM, prompt=prompts.transcribe_prompt(provider),
+            image=image, schema=TRANSCRIPT_SCHEMA, tag=f"{bill_id}.transcript",
+        )
+    except LLMError as exc:
+        log.warning("%s: transcription failed, continuing without it: %s", bill_id, exc)
+        return None
 
 
 def failed(bill_id: str, error: str) -> Extraction:

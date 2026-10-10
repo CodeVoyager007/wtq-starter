@@ -131,6 +131,17 @@ def test_all_hand_read_truth_files_are_consistent():
         assert validate.check(json.loads(path.read_text())) == [], path.name
 
 
+def test_cross_check_flags_values_the_transcript_never_saw():
+    assert validate.cross_check(TRUTH_0008, TRANSCRIPT_0008) == []
+    misread = dict(TRUTH_0008, total_taxes=596.62)
+    issues = validate.cross_check(misread, TRANSCRIPT_0008)
+    assert len(issues) == 1 and "total_taxes = 596.62" in issues[0]
+
+
+def test_cross_check_is_skipped_when_transcription_failed():
+    assert validate.cross_check(dict(TRUTH_0008, total_taxes=1), None) == []
+
+
 # ------------------------------------------------------------------ calc
 
 def test_calc_evaluates_safe_arithmetic():
@@ -152,7 +163,23 @@ def test_render_fills_placeholders():
 
 # ------------------------------------------------------------------ end to end with a mock model
 
+TRANSCRIPT_0008 = {
+    "sections": [{"name": "Bill Calculation", "items": [{"label": k, "value": v} for k, v in [
+        ("Fixed Charges", "3.00 300.0000 900.00"), ("Variable Upto 100 Units", "100.00 10.5400 1,054.00"),
+        ("Variable Upto 200 Units", "51.00 13.0100 663.51"), ("Uniform Quarterly Adjustment", "52.91"),
+        ("FCA :Feb-26", "88 1.4235 125.27"), ("Additional Surcharge (PHL)", "64.93"),
+        ("Electricity Charges", "2,860.62"), ("Electricity Duty", "29.41"), ("Sales Tax", "520.21"),
+        ("MUCT (KMC)", "20.00"), ("Taxes and Duties", "569.62"), ("Current month", "3,430.24"),
+        ("Previous Dues", "-0.53"), ("Amount Payable within Due Date", "3,430"),
+        ("with 5% LPS", "3,574"), ("with 10% LPS", "3,716"), ("Sanc Load", "3"),
+        ("Previous Reading", "8819"), ("Current Reading", "8970"), ("Units", "151")]]}],
+    "tables": [], "messages_in_english": ["FCA of XWDISCOs is also charged to KE consumers."],
+}
+
+
 def _mock_model(prompt: str) -> str:
+    if "Transcribe" in prompt:
+        return json.dumps(TRANSCRIPT_0008)
     if "QUESTIONS:" in prompt:
         return json.dumps({"answers": [
             {"question_id": "Q1", "calcs": [{"name": "pct", "expression": "569.62 / 3430.24 * 100"}],
@@ -175,6 +202,8 @@ def test_pipeline_end_to_end(tmp_path):
     _, l2 = csv_io.read(out_dir / "level2.csv")
     assert l2[0]["answer"] == "Taxes are PKR 569.62, about 16.6% of the PKR 3,430.24 bill."
     assert l2[1]["answer"] == "2 months were above 200 units."
+    report = json.loads((out_dir / "run_report.json").read_text())
+    assert report["KESC_0008"] == {"issues": [], "repaired": False, "error": None}
     assert package.check_outputs(out_dir, csv_dir) == []
     assert evaluate.score(out_dir / "level1.csv", DATA / "truth")["accuracy"] == 1.0
 

@@ -2,7 +2,11 @@
 repair prompt can show the model. Tolerance matches the scorer (±1)."""
 from __future__ import annotations
 
+import re
+
 TOLERANCE = 1.0
+_NUMBER = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
+_MIN_TRANSCRIPT_NUMBERS = 20  # below this the transcription itself probably failed
 
 
 def _close(a, b) -> bool:
@@ -65,3 +69,46 @@ def check(bill: dict) -> list[str]:
     if month and due and due[:7] < month:
         issues.append(f"due_date ({due}) is before bill_month ({month}). Re-check the dates.")
     return issues
+
+
+def _strings(value):
+    if isinstance(value, dict):
+        for v in value.values():
+            yield from _strings(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _strings(v)
+    elif isinstance(value, str):
+        yield value
+
+
+def transcript_numbers(transcript: dict | None) -> set[float]:
+    """Every number printed anywhere in the transcript, as absolute values (CR/minus ignored)."""
+    numbers = set()
+    for text in _strings(transcript or {}):
+        for token in _NUMBER.findall(text):
+            try:
+                numbers.add(abs(round(float(token.replace(",", "")), 2)))
+            except ValueError:
+                continue
+    return numbers
+
+
+def cross_check(bill: dict, transcript: dict | None) -> list[str]:
+    """Flag extracted amounts that the independent full transcription never saw."""
+    printed = transcript_numbers(transcript)
+    if len(printed) < _MIN_TRANSCRIPT_NUMBERS:
+        return []
+    values = [(name, bill.get(name)) for name in (
+        "sanctioned_load_kw", "previous_reading", "current_reading", "units_consumed", "total_charges",
+        "total_taxes", "current_bill", "arrears", "payable_within_due_date", "payable_after_due_date")]
+    values += [(f"charges[{i}] ({c['type']})", c["amount"]) for i, c in enumerate(bill.get("charges") or [])]
+    values += [(f"taxes[{i}] ({t['type']})", t["amount"]) for i, t in enumerate(bill.get("taxes") or [])]
+    missing = [
+        f"{name} = {value}" for name, value in values
+        if value not in (None, 0) and not any(abs(abs(value) - p) <= 0.011 for p in printed)
+    ]
+    if not missing:
+        return []
+    return [f"These extracted values do not appear anywhere in an independent transcription of the bill, "
+            f"so they may be misread: {', '.join(missing)}."]

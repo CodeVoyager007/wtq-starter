@@ -103,10 +103,13 @@ frontend can call the same code later):
    - `total_charges + total_taxes == current_bill` (KE)
    - `payable_after_due_date >= payable_within_due_date`
    - dates are valid and `issue_date <= due_date`
-6. **Repair** (at most 1 extra call): only if checks fail, re-ask with the image, the previous JSON and the list of failed checks. Keep the version with fewer failures. Never "fix" numbers in code: the guide says report as printed.
-7. **Fail-safe**: if every call fails, write the all-`null` schema and log it. A cell is never empty.
+6. **Full transcription** (1 call, independent second reading): every section, label/value pair, table row, chart bar and notice (Urdu translated), with identifiers hidden. Used twice:
+   - **cross-check**: every extracted amount must appear somewhere in the transcript, otherwise it is flagged as a likely misread;
+   - **Level 2 context**: any question about anything printed on the bill can be answered, not only the fields we chose.
+7. **Repair** (at most 1 extra call): only if a check fails, re-ask with the image, the previous JSON, the failed checks and the transcript as evidence. Keep the version with fewer failures. Never "fix" numbers in code: the guide says report as printed.
+8. **Fail-safe**: if every call fails, write the all-`null` schema and log it. A cell is never empty.
 
-Call budget: 10 test bills = 10 calls, plus at most 10 repairs.
+Call budget: 10 test bills = 20 calls (extract + transcript), plus at most 10 repairs.
 
 ## 5. Level 2 flow (per bill)
 
@@ -121,7 +124,7 @@ Call budget: 10 test bills = 10 calls, plus at most 10 repairs.
 4. Prompt rules from guide 6.1: only use bill data, say clearly when a value is not on the bill, label estimates and show the method, state the interpretation when a question is ambiguous, English only, no identifiers.
 5. After 12:30, when the real 12 questions are known, add deterministic helpers for any question that is purely arithmetic (for example averages over the usage history).
 
-Call budget: 10 calls, so 1 full test run is about 20 to 30 calls, well inside the free tier.
+Call budget: 10 calls, so 1 full test run is about 30 to 40 calls (3 to 4 minutes at 12/min), well inside the free tier.
 
 ## 6. Reliability
 

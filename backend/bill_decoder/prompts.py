@@ -67,7 +67,19 @@ PROVIDER_GUIDES = {
 - The yellow notice text may state FPA and subsidy amounts: summarise it in English in notes.""",
 }
 
-UNKNOWN_PROVIDER_GUIDE = "Identify the provider from the logo and follow the same rules."
+TRANSCRIBE_SYSTEM = """You transcribe an electricity bill image completely and exactly, so that any question about the bill can be answered from your transcript alone.
+
+Rules:
+- Go through the whole bill, top to bottom, left to right. Do not skip any box, table, footnote, stamp, chart label or small print.
+- "sections": one entry per box or area (use the printed heading as the name, e.g. "Customer Information", "Bill Calculation", "Due Date box"). Each label/value pair goes in items, copied exactly as printed (keep CR, minus signs, commas, %, units, dates as written).
+- "tables": every table with its column headers and every row, cells copied exactly. Bar charts count as tables: one row per bar with its label and the number written on it.
+- "messages_in_english": every notice or message, translated to English if it is in Urdu.
+- "unreadable_or_covered": list fields that are covered by grey boxes or unreadable. Do not guess them.
+- Never copy personal identifiers (names, addresses, CNIC, account, reference, consumer, contract, invoice, meter numbers): write the label with value "[hidden]".
+- Read digits one by one. Phone photos may be tilted; follow each printed row across.
+"""
+
+UNKNOWN_PROVIDER_GUIDE ="Identify the provider from the logo and follow the same rules."
 
 
 def extract_prompt(provider: str | None) -> str:
@@ -75,20 +87,30 @@ def extract_prompt(provider: str | None) -> str:
     return f"{guide}\n\nRead the attached bill and return the JSON."
 
 
-def repair_prompt(provider: str | None, previous: dict, issues: list[str]) -> str:
+def transcribe_prompt(provider: str | None) -> str:
+    return f"This is a {provider or 'Pakistani'} electricity bill. Transcribe all of it."
+
+
+def repair_prompt(provider: str | None, previous: dict, issues: list[str], transcript: dict | None) -> str:
+    second_reading = (
+        "\n\nA separate full transcription of the same bill (may also contain errors; the image is the final authority):\n"
+        f"{json.dumps(transcript, ensure_ascii=False)}" if transcript else ""
+    )
     return (
         f"{extract_prompt(provider)}\n\n"
-        "A previous reading of this bill produced the JSON below, but these consistency checks failed:\n"
+        "A previous reading of this bill produced the JSON below, but these checks failed:\n"
         + "\n".join(f"- {issue}" for issue in issues)
         + "\n\nLook at the image again, fix only what was misread, and return the full corrected JSON. "
         "If the bill itself is printed that way, keep the printed values.\n\n"
         f"Previous JSON:\n{json.dumps(previous, ensure_ascii=False)}"
+        f"{second_reading}"
     )
 
 
 ANSWER_SYSTEM = """You answer electricity customers' questions about their own bill, in plain English.
 
-You receive the bill image, FACTS (values already extracted and checked from this bill) and the questions.
+You receive the bill image, FACTS (values already extracted and checked from this bill, plus a full "transcript" of everything printed) and the questions.
+Prefer FACTS for amounts in the scored fields; use the transcript and the image for anything else (labels, notices, history, rates, small print).
 Rules:
 - Use only information on this bill. Do not use outside tariff, rate or tax knowledge. If the bill does not show a needed value, say so clearly instead of guessing.
 - Do arithmetic ONLY through "calcs": give each calculation a name and a Python arithmetic expression using plain numbers (no thousands separators), + - * / ( ) and the functions sum, avg, min, max, count, round, abs, median. Example: {"name": "tax_pct", "expression": "569.62 / 3430.24 * 100"}.
