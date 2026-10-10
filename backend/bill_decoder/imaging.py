@@ -16,7 +16,11 @@ IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 
 
 def load(path: Path) -> Image:
-    with PILImage.open(path) as img:
+    return load_bytes(Path(path).read_bytes())
+
+
+def load_bytes(data: bytes) -> Image:
+    with PILImage.open(io.BytesIO(data)) as img:
         img = ImageOps.exif_transpose(img).convert("RGB")
         long_side = max(img.size)
         if long_side > MAX_SIDE:

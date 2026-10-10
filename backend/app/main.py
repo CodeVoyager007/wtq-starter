@@ -8,7 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import config, custom, llm, store
+from bill_decoder.llm import LLMError as BillLLMError
+
+from . import bills, config, custom, llm, store
 from .modules import rag
 from .modules.profiler import profile_dataframe, schema_text
 
@@ -22,6 +24,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(bills.router)
+
+
+@app.exception_handler(BillLLMError)
+async def bill_llm_error_handler(_, exc: BillLLMError):
+    return JSONResponse(status_code=502, content={"detail": f"The AI model call failed: {exc}"})
 
 
 @app.exception_handler(ValueError)

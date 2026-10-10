@@ -1,5 +1,5 @@
 import { API_URL } from "./config";
-import type { ChatMessage, RunResult, UploadResponse } from "./types";
+import type { ChatMessage, DecodedBill, RunResult, UploadResponse } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
@@ -21,7 +21,17 @@ const json = (body: unknown): RequestInit => ({
 
 export const api = {
   health: () =>
-    request<{ status: string; mock_mode: boolean; gemini_keys: number; fallback: boolean; model: string }>("/health"),
+    request<{ status: string; mock_mode: boolean; gemini_keys: number; model: string }>("/health"),
+
+  decodeBill: (file: File, provider: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("provider", provider);
+    return request<DecodedBill>("/api/bill", { method: "POST", body: form });
+  },
+
+  askBill: (token: string, question: string) =>
+    request<{ question: string; answer: string }>("/api/bill/ask", json({ token, question })),
 
   uploadFile: (file: File) => {
     const form = new FormData();

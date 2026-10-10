@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/config";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/app", label: "Workspace" },
+  { href: "/app", label: "Decode a bill" },
   { href: "/how-it-works", label: "How it works" },
 ];
 

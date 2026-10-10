@@ -47,7 +47,7 @@ export default function Home() {
         </ol>
         <div className="mt-10 text-center">
           <Link href="/app" className="btn btn-primary text-lg">
-            Open the workspace
+            Decode a bill
           </Link>
         </div>
       </section>

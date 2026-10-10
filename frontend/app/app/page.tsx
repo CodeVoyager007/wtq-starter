@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Workspace from "@/components/Workspace";
+import BillDecoder from "@/components/BillDecoder";
 import { siteConfig } from "@/lib/config";
 
-export const metadata: Metadata = { title: `Workspace · ${siteConfig.name}` };
+export const metadata: Metadata = { title: `Decode a bill · ${siteConfig.name}` };
 
 export default function AppPage() {
-  return <Workspace />;
+  return <BillDecoder />;
 }

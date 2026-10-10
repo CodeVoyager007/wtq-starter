@@ -293,3 +293,28 @@ def test_disallowed_model_is_refused(tmp_path):
     with pytest.raises(ConfigError):
         Settings(provider="google", model="gemini-3.5-flash-lite", api_keys=[]).check()
     Settings(provider="google", model="gemini-3.1-flash-lite", api_keys=["k"]).check()
+
+
+# ------------------------------------------------------------------ web API
+
+def test_bill_api_decodes_and_answers(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from app import bills
+    from app.main import app
+
+    monkeypatch.setattr(bills, "_client", Client(settings(tmp_path), mock=_mock_model))
+    web = TestClient(app)
+    image = (DATA / "bills" / "KESC_0008.png").read_bytes()
+
+    res = web.post("/api/bill", files={"file": ("KESC_0008.png", image, "image/png")}, data={"provider": "auto"})
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["level1"] == TRUTH_0008 and body["checks"]["issues"] == []
+
+    res = web.post("/api/bill/ask", json={"token": body["token"], "question": "How much is tax?"})
+    assert res.status_code == 200 and res.json()["answer"]
+
+    res = web.post("/api/bill", files={"file": ("photo.png", image, "image/png")}, data={"provider": "auto"})
+    assert res.status_code == 400  # provider unknown from the file name
+    res = web.post("/api/bill", files={"file": ("photo.png", image, "image/png")}, data={"provider": "KE"})
+    assert res.json()["bill_id"] == "KESC_photo"
