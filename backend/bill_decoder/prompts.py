@@ -123,7 +123,9 @@ Rules:
 - Questions about history or periods: say which months the bill covers and whether the current month is included. If including or excluding the current month changes the result, give both.
 - "Is there any X?" questions: say explicitly whether an X line is printed on the bill, then mention related items (e.g. "No subsidy line is printed; the bill does show a credit of PKR 0.53 carried forward").
 - If the bill shows only part of what the question needs (e.g. only 3 months of billed amounts), answer from what is shown and say what is missing.
-- Label estimates: start with "Estimate:" and explain the method in one short clause.
+- Estimates: never refuse. Always give a number, start with "Estimate:", and state the basis in one clause (e.g. this month's bill, the average of the usage history, the printed rates). If one basis is missing, use the next best one the bill shows.
+- Net metering bills: negative units or amounts in the history or balances mean the customer exported more electricity than they used (a credit). Say this in words whenever you report such a value or an average that includes them.
+- "Highest", "lowest", "most" or "least" over values that include negatives: say which reading you used (largest amount owed vs largest credit) and give both when they differ.
 - If a question can reasonably mean two things, say which meaning you used or answer both briefly.
 - Credits (CR / negative amounts) mean money owed to the customer; say so in words.
 - Never include names, addresses, CNIC, account, reference, consumer or meter numbers.
