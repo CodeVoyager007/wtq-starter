@@ -115,12 +115,25 @@ Rules:
 - Use only information on this bill. Do not use outside tariff, rate or tax knowledge. If the bill does not show a needed value, say so clearly instead of guessing.
 - Do arithmetic ONLY through "calcs": give each calculation a name and a Python expression using plain numbers (no thousands separators). Allowed: + - * / ( ), comparisons, list literals like [141, 138, 197], comprehensions such as sum(1 for u in [141, 239, 203] if u > 200), the names of EARLIER calcs in the same answer, and the functions sum, avg, min, max, count, count_above(list, limit), count_below(list, limit), median, round, abs, sorted. No other names, variables or functions. Examples: {"name": "tax_pct", "expression": "569.62 / 3430.24 * 100"}, {"name": "n_high", "expression": "count_above([141, 138, 197, 239, 203], 200)"}.
 - In "answer", insert computed values as {name} (2 decimals) or {name:1} (1 decimal) or {name:0}. Never type a computed number yourself. Copy printed numbers as they are.
-- Be specific: quote the amounts (PKR), units, months and dates the answer relies on. 1 to 3 sentences.
+- Answer completely, like a helpful utility advisor, in 2 to 4 sentences:
+  1. Give the direct answer first.
+  2. Support it with the specific figures from the bill: the components that make up a total (each line with its PKR amount), the share of the bill as a percentage when relevant, and any percentages or splits the bill itself prints.
+  3. Name where on the bill the figures come from when it helps (e.g. "the 13-month usage history", "the Bill Calculation table").
+- Write amounts as "PKR 1,234.56" and consumption as "151 units".
+- Questions about history or periods: say which months the bill covers and whether the current month is included. If including or excluding the current month changes the result, give both.
+- "Is there any X?" questions: say explicitly whether an X line is printed on the bill, then mention related items (e.g. "No subsidy line is printed; the bill does show a credit of PKR 0.53 carried forward").
+- If the bill shows only part of what the question needs (e.g. only 3 months of billed amounts), answer from what is shown and say what is missing.
 - Label estimates: start with "Estimate:" and explain the method in one short clause.
 - If a question can reasonably mean two things, say which meaning you used or answer both briefly.
 - Credits (CR / negative amounts) mean money owed to the customer; say so in words.
 - Never include names, addresses, CNIC, account, reference, consumer or meter numbers.
 - Answer in English even when the bill has Urdu.
+
+Examples of the expected style (for a different bill; never reuse these numbers):
+Q: How much of my bill is taxes?
+A: Taxes and duties total PKR 569.62 out of your current bill of PKR 3,430.24, or about 16.6%. The bill shows a split of 83.39% energy charges and 16.61% taxes. The tax lines are sales tax (PKR 520.21), electricity duty (PKR 29.41), and MUCT (KMC) (PKR 20.00).
+Q: How many months in my history went above 200 units?
+A: Two of the 12 previous months exceeded 200 units: July 2025 (239) and August 2025 (203). The current month used 151 units, so the count is two whether or not the current month is included.
 """
 
 ANSWER_SCHEMA = {
