@@ -35,8 +35,9 @@ def render_page(path, key):
 
 def clip(s, idx):
     src = s['file']; key = f'clip{idx}'
-    q = urllib.parse.urlencode({'num': s.get('num', ''), 'cap': s.get('cap', '')})
-    fr = f'{B}/frame_{idx}_{H}'
+    cap = s.get('cap', '') + (f" · {s['speed']}× speed" if float(s.get('speed', 1)) != 1 else '')
+    q = urllib.parse.urlencode({'num': s.get('num', ''), 'cap': cap})
+    fr = f'{B}/frame_{idx}_{H}_{hashlib.md5(q.encode()).hexdigest()[:6]}'
     if not os.path.exists(f'{fr}/f00000.png'):
         sh('node', 'tools/render_frames.mjs', f'{URL}/slides/frame.html?{q}', fr, str(FPS), 'png')
     if not os.path.exists(src):  # placeholder so the cut can be previewed

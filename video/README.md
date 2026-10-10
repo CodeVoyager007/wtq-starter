@@ -4,6 +4,19 @@ Cinematic intro, chapter cards, Level 1 / Level 2 motion graphics, end card, and
 `tools/assemble.py` stitches everything with the screen recordings into `out/demo.mp4`, keeping the
 3 minute and file-size limits from the participant guide (section 7.7).
 
+## Shot list (what the judges must see, guide section 7.7)
+
+Before recording: terminal full screen, font 18pt or larger, dark theme, close notifications, `.env` not on screen.
+
+| Clip | Length | Show |
+|---|---|---|
+| `raw/01_launch.mp4` | 5-8 s | Type and run the start command. |
+| `raw/02_extract.mp4` | 8-12 s | Bill image `KESC_0008` open next to the terminal, run Level 1, JSON prints. |
+| `raw/03_ask.mp4` | 8-12 s | Ask 2-3 questions about the same bill, answers print. |
+| `raw/04_batch.mp4` | any | Run on the 10 test bills until `level1.csv` and `level2.csv` are written; open one CSV at the end. Long runs: set `"speed": 4` in `timeline.json`. |
+
+The decode and Q&A slides replay the real output in motion graphics, so they must be fed from the run you recorded.
+
 ## Make the final video
 
 1. Record the terminal (Win + Shift + R) and save the clips into `raw/`:
