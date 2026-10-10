@@ -265,7 +265,7 @@ def test_zip_layout_and_secret_guard(tmp_path):
 
 def test_disallowed_model_is_refused(tmp_path):
     with pytest.raises(ConfigError):
-        Settings(provider="google", model="gemini-2.5-flash", api_keys=["k"]).check()
+        Settings(provider="google", model="not-an-allowed-model", api_keys=["k"]).check()
     with pytest.raises(ConfigError):
         Settings(provider="google", model="gemini-3.5-flash-lite", api_keys=[]).check()
     Settings(provider="google", model="gemini-3.1-flash-lite", api_keys=["k"]).check()

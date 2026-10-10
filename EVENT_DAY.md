@@ -3,8 +3,7 @@
 ## Night before
 
 - [ ] Both servers start with no errors (see README) and `uv run pytest -q` passes
-- [ ] Two Gemini keys in `backend/.env` (one per Google account or project). One real test call each
-- [ ] Optional: Groq or OpenRouter key in `FALLBACK_*`
+- [ ] Two Gemini keys in `backend/.env` (API_KEY, API_KEY_BACKUP) (one per Google account or project). One real test call each
 - [ ] GitHub repo created and pushed, logged in on your laptop
 - [ ] Laptop, charger, phone hotspot, ID and your confirmation email
 - [ ] Read the follow-up guidelines email from the organizers (rules, what is allowed, how to submit)

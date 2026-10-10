@@ -10,14 +10,14 @@ def env(name: str, default: str = "") -> str:
     return os.getenv(name, default).strip()
 
 
-# Gemini keys are tried in order: primary first, then the backup key.
-GEMINI_KEYS = [k for k in (env("GEMINI_API_KEY"), env("GEMINI_API_KEY_BACKUP")) if k]
-GEMINI_MODEL = env("GEMINI_MODEL", "gemini-2.5-flash")
+# Same settings as the bill_decoder pipeline (MODEL_NAME, API_KEY, API_KEY_BACKUP).
+# Only competition-allowed models: anything else is refused before any call.
+from bill_decoder.config import ALLOWED_MODELS  # noqa: E402
 
-# Optional last-resort provider (any OpenAI-compatible API: Groq, OpenRouter, ...).
-FALLBACK_BASE_URL = env("FALLBACK_BASE_URL")  # e.g. https://api.groq.com/openai/v1
-FALLBACK_API_KEY = env("FALLBACK_API_KEY")
-FALLBACK_MODEL = env("FALLBACK_MODEL")  # e.g. llama-3.3-70b-versatile
+GEMINI_KEYS = [k for k in (env("API_KEY"), env("API_KEY_BACKUP")) if k]
+GEMINI_MODEL = env("MODEL_NAME", "gemini-3.5-flash-lite")
+if GEMINI_MODEL not in ALLOWED_MODELS["google"]:
+    raise RuntimeError(f"MODEL_NAME '{GEMINI_MODEL}' is not an allowed model: {sorted(ALLOWED_MODELS['google'])}")
 
 # Comma separated list of allowed frontend origins (Vercel previews are allowed by regex in main.py).
 FRONTEND_ORIGINS = [
@@ -28,7 +28,3 @@ FRONTEND_ORIGINS = [
 def mock_mode() -> bool:
     """LLM_MOCK=1 makes every LLM call return a canned answer. For tests and UI work with no key."""
     return env("LLM_MOCK") == "1"
-
-
-def has_fallback() -> bool:
-    return bool(FALLBACK_BASE_URL and FALLBACK_API_KEY and FALLBACK_MODEL)

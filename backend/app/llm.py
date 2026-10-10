@@ -1,13 +1,11 @@
 """One place that talks to the LLM.
 
-Order of attempts: Gemini primary key -> Gemini backup key -> optional fallback provider.
+Order of attempts: Gemini primary key -> Gemini backup key. No other provider is ever called.
 Every AI module calls generate() or generate_json(), so swapping models is a one-file change.
 """
 import json
 import re
 import time
-
-import httpx
 
 from . import config
 
@@ -30,24 +28,6 @@ def _gemini(prompt: str, system: str | None, json_mode: bool, temperature: float
     return resp.text or ""
 
 
-def _fallback(prompt: str, system: str | None, json_mode: bool, temperature: float) -> str:
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
-    body = {"model": config.FALLBACK_MODEL, "messages": messages, "temperature": temperature}
-    if json_mode:
-        body["response_format"] = {"type": "json_object"}
-    r = httpx.post(
-        f"{config.FALLBACK_BASE_URL.rstrip('/')}/chat/completions",
-        json=body,
-        headers={"Authorization": f"Bearer {config.FALLBACK_API_KEY}"},
-        timeout=60,
-    )
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
-
-
 def generate(
     prompt: str,
     system: str | None = None,
@@ -59,8 +39,8 @@ def generate(
     if config.mock_mode():
         return mock if mock is not None else "[mock] " + prompt[:80].replace("\n", " ")
 
-    if not config.GEMINI_KEYS and not config.has_fallback():
-        raise LLMError("No API key found. Add GEMINI_API_KEY to backend/.env and restart the server.")
+    if not config.GEMINI_KEYS:
+        raise LLMError("No API key found. Add API_KEY to backend/.env and restart the server.")
 
     errors: list[str] = []
     for key in config.GEMINI_KEYS:
@@ -70,12 +50,6 @@ def generate(
             except Exception as e:  # rate limit, network, bad key...
                 errors.append(f"gemini(...{key[-4:]}): {str(e)[:160]}")
                 time.sleep(1.5 * (attempt + 1))
-
-    if config.has_fallback():
-        try:
-            return _fallback(prompt, system, json_mode, temperature)
-        except Exception as e:
-            errors.append(f"fallback: {str(e)[:160]}")
 
     raise LLMError(" | ".join(errors[-3:]))
 

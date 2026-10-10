@@ -40,7 +40,6 @@ def health():
         "status": "ok",
         "mock_mode": config.mock_mode(),
         "gemini_keys": len(config.GEMINI_KEYS),
-        "fallback": config.has_fallback(),
         "model": config.GEMINI_MODEL,
     }
 
