@@ -158,7 +158,18 @@ def test_calc_evaluates_safe_arithmetic():
     assert calc.evaluate("count([239, 203])") == 2
 
 
-@pytest.mark.parametrize("expr", ["__import__('os')", "open('x')", "(1).real", "a + 1", "9 ** 9999"])
+def test_calc_handles_what_the_model_actually_wrote():
+    assert calc.evaluate("sum(1 for u in [141, 239, 203, 151] if u > 200)") == 2
+    assert calc.evaluate("len([u for u in [440, 407, 243] if u > 300])") == 2
+    assert calc.evaluate("sum([u > 200 for u in [239, 203, 96]])") == 2
+    assert calc.evaluate("count_above([239, 203, 96], 200)") == 2
+    assert calc.evaluate("max(r[1] for r in [[1, 52906], [2, 23954]])") == 52906
+    assert calc.evaluate_all({"total_cost": "3430.24", "per_unit": "total_cost / 151"})["per_unit"] == \
+        pytest.approx(22.717, abs=1e-3)
+
+
+@pytest.mark.parametrize("expr", ["__import__('os')", "open('x')", "(1).real", "a + 1", "9 ** 9999",
+                                  "[1] * 10 ** 9", "'abc'", "[x for x in 5]"])
 def test_calc_rejects_anything_else(expr):
     with pytest.raises(calc.CalcError):
         calc.evaluate(expr)

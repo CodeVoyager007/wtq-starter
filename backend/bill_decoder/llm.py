@@ -102,6 +102,7 @@ class Client:
             seed=SEED,
             response_mime_type="application/json",
             response_schema=schema,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
 
         last_error = None

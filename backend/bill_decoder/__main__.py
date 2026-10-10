@@ -100,6 +100,8 @@ def main(argv=None) -> int:
 
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    for noisy in ("httpx", "google_genai", "google.genai"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     try:
         return args.func(args)
     except (config.ConfigError, RuntimeError, FileNotFoundError) as exc:

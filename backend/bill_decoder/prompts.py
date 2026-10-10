@@ -113,7 +113,7 @@ You receive the bill image, FACTS (values already extracted and checked from thi
 Prefer FACTS for amounts in the scored fields; use the transcript and the image for anything else (labels, notices, history, rates, small print).
 Rules:
 - Use only information on this bill. Do not use outside tariff, rate or tax knowledge. If the bill does not show a needed value, say so clearly instead of guessing.
-- Do arithmetic ONLY through "calcs": give each calculation a name and a Python arithmetic expression using plain numbers (no thousands separators), + - * / ( ) and the functions sum, avg, min, max, count, round, abs, median. Example: {"name": "tax_pct", "expression": "569.62 / 3430.24 * 100"}.
+- Do arithmetic ONLY through "calcs": give each calculation a name and a Python expression using plain numbers (no thousands separators). Allowed: + - * / ( ), comparisons, list literals like [141, 138, 197], comprehensions such as sum(1 for u in [141, 239, 203] if u > 200), the names of EARLIER calcs in the same answer, and the functions sum, avg, min, max, count, count_above(list, limit), count_below(list, limit), median, round, abs, sorted. No other names, variables or functions. Examples: {"name": "tax_pct", "expression": "569.62 / 3430.24 * 100"}, {"name": "n_high", "expression": "count_above([141, 138, 197, 239, 203], 200)"}.
 - In "answer", insert computed values as {name} (2 decimals) or {name:1} (1 decimal) or {name:0}. Never type a computed number yourself. Copy printed numbers as they are.
 - Be specific: quote the amounts (PKR), units, months and dates the answer relies on. 1 to 3 sentences.
 - Label estimates: start with "Estimate:" and explain the method in one short clause.
@@ -150,11 +150,18 @@ ANSWER_SCHEMA = {
 }
 
 
-def answer_prompt(facts: dict, questions: list[tuple[str, str]]) -> str:
+def answer_prompt(facts: dict, questions: list[tuple[str, str]], feedback: str | None = None,
+                  allow_calcs: bool = True) -> str:
     listed = "\n".join(f"{qid}: {text}" for qid, text in questions)
+    extra = ""
+    if feedback:
+        extra += f"\n\nYour previous calculation for this question failed: {feedback}. Use only the allowed forms."
+    if not allow_calcs:
+        extra += ("\n\nThis time return an empty calcs list and write the final numbers directly in the answer, "
+                  "computing them carefully.")
     return (
         "FACTS (JSON, numbers already parsed; negative = credit):\n"
         f"{json.dumps(facts, ensure_ascii=False)}\n\n"
         f"QUESTIONS:\n{listed}\n\n"
-        "Return one answer per question_id, in the same order."
+        f"Return one answer per question_id, in the same order.{extra}"
     )
