@@ -80,7 +80,7 @@ json.dump(cues, open(f'{B}/cues.json', 'w'))
 sh('python3', 'tools/music.py', f'{B}/cues.json', f'{B}/music.wav')
 sh('python3', 'tools/intro_audio.py', f'{B}/intro_sfx.wav')
 ff('-i', f'{B}/music.wav', '-i', f'{B}/intro_sfx.wav', '-filter_complex',
-   '[0:a]volume=0.7[m];[1:a]volume=0.9,apad[s];[m][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.8[a]',
+   '[0:a]volume=0.7[m];[1:a]volume=0.9,apad[s];[m][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.8:level=0[a]',
    '-map', '[a]', f'{B}/mix.wav')
 
 # Two-pass encode to a size target so the ZIP stays under 15 MB
