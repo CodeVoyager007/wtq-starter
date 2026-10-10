@@ -36,7 +36,7 @@ def render_page(path, key):
 def clip(s, idx):
     src = s['file']; key = f'clip{idx}'
     cap = s.get('cap', '') + (f" · {s['speed']}× speed" if float(s.get('speed', 1)) != 1 else '')
-    q = urllib.parse.urlencode({'num': s.get('num', ''), 'cap': cap})
+    q = urllib.parse.urlencode({'num': s.get('num', ''), 'cap': cap, 'title': s.get('title', 'bill-decoder — terminal')})
     fr = f'{B}/frame_{idx}_{H}_{hashlib.md5(q.encode()).hexdigest()[:6]}'
     if not os.path.exists(f'{fr}/f00000.png'):
         sh('node', 'tools/render_frames.mjs', f'{URL}/slides/frame.html?{q}', fr, str(FPS), 'png')
@@ -46,12 +46,16 @@ def clip(s, idx):
         ff('-f', 'lavfi', '-i', f'color=c=0x0f0d0b:s=1536x864:d={s.get("placeholder_sec", 6)}:r={FPS}',
            '-vf', f"drawtext=fontfile={FONT}:text='{txt}':fontcolor=0x8a7f74:fontsize=44:x=(w-tw)/2:y=(h-th)/2",
            '-pix_fmt', 'yuv420p', src)
-    spd = float(s.get('speed', 1)); trim = []
-    if 'from' in s: trim += ['-ss', str(s['from'])]
-    if 'to' in s: trim += ['-to', str(s['to'])]
-    out = f'{SEG}/{key}.mp4'
-    ff(*trim, '-i', src, '-loop', '1', '-i', f'{fr}/f00000.png', '-filter_complex',
-       f'[0:v]setpts=PTS/{spd},fps={FPS},scale=1536:864:force_original_aspect_ratio=decrease,pad=1536:864:(ow-iw)/2:(oh-ih)/2:color=0x0f0d0b[v];'
+    spd = float(s.get('speed', 1)); out = f'{SEG}/{key}.mp4'
+    # Cut list: "ranges": [[start, end], ...] keeps only those parts, in order
+    rng = s.get('ranges') or [[s.get('from', 0), s.get('to', dur(src))]]
+    cuts = ''.join(f'[0:v]trim={a}:{b},setpts=PTS-STARTPTS[r{j}];' for j, (a, b) in enumerate(rng))
+    cuts += ''.join(f'[r{j}]' for j in range(len(rng))) + f'concat=n={len(rng)}:v=1:a=0[cut];'
+    crop = 'crop={}:{}:{}:{},'.format(*s['crop'][2:], *s['crop'][:2]) if 'crop' in s else ''
+    hold = f",tpad=stop_mode=clone:stop_duration={s['hold']}" if 'hold' in s else ''
+    ff('-i', src, '-loop', '1', '-i', f'{fr}/f00000.png', '-filter_complex',
+       cuts + f'[cut]{crop}setpts=PTS/{spd},fps={FPS}{hold},scale=1536:864:force_original_aspect_ratio=decrease:flags=lanczos,'
+       f'pad=1536:864:(ow-iw)/2:(oh-ih)/2:color=0x0f0d0b[v];'
        f'color=c=black:s=1920x1080:r={FPS}[bg];[bg][v]overlay=192:100:shortest=1[b];[b][1:v]overlay=0:0:shortest=1,'
        f"scale=w='trunc(1920*(1+0.03*pow(max(0,1-t/1.4),2))/2)*2':h=-2:eval=frame,crop=1920:1080,format=yuv420p",
        '-an', '-c:v', 'libx264', '-crf', '16', '-preset', 'fast', out)

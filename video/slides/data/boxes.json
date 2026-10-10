@@ -1,10 +1,3 @@
 {
-  "_note": "Pixel boxes [x0,y0,x1,y1] on assets/KESC_0008.png (1446x2046) for each field.",
-  "provider": [36, 24, 270, 128], "tariff": [1300, 116, 1366, 142], "sanctioned_load_kw": [1326, 82, 1366, 106],
-  "bill_month": [52, 158, 218, 186], "issue_date": [230, 158, 448, 186], "reading_date": [903, 672, 1110, 702],
-  "due_date": [1104, 404, 1384, 462], "previous_reading": [228, 700, 342, 726], "current_reading": [346, 700, 456, 726],
-  "units_consumed": [444, 428, 642, 482], "charges": [762, 776, 1408, 892], "total_charges": [762, 891, 1408, 912],
-  "taxes": [762, 911, 1408, 968], "total_taxes": [762, 968, 1408, 990], "current_bill": [762, 990, 1408, 1013],
-  "arrears": [762, 1050, 1408, 1073], "payable_within_due_date": [762, 1108, 1408, 1130],
-  "payable_after_due_date": [762, 1186, 1408, 1208]
+  "_note": "No field boxes for IESCO_0005 (bill image comes from the recording); the camera holds on the whole bill."
 }

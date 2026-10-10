@@ -41,14 +41,15 @@
 <script src="common.js"></script>
 <script>
 // Data-driven: data/level1.json (the CLI's real output) + data/boxes.json (where each field sits on the bill).
-const STEP = 0.72, LEAD = 2.6, VW = 900, VH = 870;
+let STEP = 0.72; const LEAD = 2.6, VW = 900, VH = 870;
 const BILL = params.get('bill') || 'KESC_0008';
 let steps = [], boxes = {}, lines = [], IW = 1446, IH = 2046;
 const fmt = v => v === null ? `<span class="nul">null</span>` : typeof v === 'number' ? `<span class="num">${v}</span>` : `<span class="str">"${v}"</span>`;
 window.DUR = 20;
 window.assetsReady = Promise.all([loadJSON('data/level1.json'), loadJSON('data/boxes.json'), loadImages([`../assets/${BILL}.png`])])
 .then(([data, bx]) => {
-  boxes = bx; $('bill').src = `../assets/${BILL}.png`;
+  boxes = bx; if (Object.keys(bx).filter(k => !k.startsWith('_')).length === 0) STEP = 0.42;
+  $('bill').src = `../assets/${BILL}.png`;
   IW = $('bill').naturalWidth || IW; IH = $('bill').naturalHeight || IH;
   $('tag').textContent = `${BILL} · ${data.provider}`;
   let html = '<div class="ln on">{</div>';

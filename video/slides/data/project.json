@@ -22,22 +22,17 @@
     {
       "num": "01",
       "title": "Launch",
-      "sub": "Run it from the terminal"
+      "sub": "Backend and frontend, from the terminal"
     },
     {
       "num": "02",
       "title": "Extract",
-      "sub": "Level 1 · Bill to JSON"
+      "sub": "Level 1 · Upload a bill, get JSON"
     },
     {
       "num": "03",
       "title": "Explain",
-      "sub": "Level 2 · Questions answered"
-    },
-    {
-      "num": "04",
-      "title": "Batch Run",
-      "sub": "10 test bills → level1.csv + level2.csv"
+      "sub": "Level 2 · Ask about the same bill"
     }
   ]
 }
