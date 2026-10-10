@@ -104,7 +104,10 @@ cues = {'duration': total, 'drop': intro_end - 0.6,
         'hits': [st + 0.25 for ty, st, d in starts if ty == 'chapter' and st > 1],
         'outro': next((st for ty, st, d in starts if ty == 'outro'), total - 4)}
 json.dump(cues, open(f'{B}/cues.json', 'w'))
-sh('python3', 'tools/music.py', f'{B}/cues.json', f'{B}/music.wav')
+if os.path.isdir(f'{B}/sf'):  # orchestral score from FluidR3 GM samples (see README for download + credit)
+    sh('python3', 'tools/score.py', f'{B}/sf', f'{B}/cues.json', f'{B}/music.wav')
+else:
+    sh('python3', 'tools/music.py', f'{B}/cues.json', f'{B}/music.wav')
 sh('python3', 'tools/intro_audio.py', f'{B}/intro_sfx.wav')
 ff('-i', f'{B}/music.wav', '-i', f'{B}/intro_sfx.wav', '-filter_complex',
    '[0:a]volume=0.45[m];[1:a]volume=0.9,apad[s];[m][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.8:level=0[a]',

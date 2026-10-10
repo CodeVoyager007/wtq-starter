@@ -30,3 +30,17 @@ The decode and Q&A slides replay the real output in motion graphics, so they mus
    python3 tools/assemble.py
    ```
    Trim long clips with `"from"`/`"to"` or speed them up with `"speed"` in `timeline.json`.
+
+## Music and credits
+
+The score (`tools/score.py`) is an original composition, played with instrument samples from the
+**FluidR3 GM** soundfont, rendered by [midi-js-soundfonts](https://github.com/gleitz/midi-js-soundfonts)
+and released under [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/us/).
+Samples are downloaded into `build/sf/` (not committed):
+
+```
+B=https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/FluidR3_GM
+curl -o build/sf/brass_section-A3.mp3 $B/brass_section-mp3/A3.mp3   # same pattern for each instrument/note
+```
+
+Credit: *Music: original score using FluidR3 GM instrument samples (Frank Wen), CC BY 3.0.*
