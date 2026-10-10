@@ -158,3 +158,101 @@ h4,
 .json-number { color: var(--color-number); }
 .json-string { color: var(--color-string); }
 .json-null { color: var(--color-danger); }
+
+/* ---------- Motion ---------- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(255 122 26 / 0); }
+  50% { box-shadow: 0 0 28px 2px rgb(255 122 26 / 0.35); }
+}
+
+.reveal {
+  animation: fade-up 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.scan-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.scan-frame.scanning::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(5 5 5 / 0.35);
+  z-index: 1;
+}
+.scan-frame.scanning::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent, #ffb340, #ff7a1a, #ffb340, transparent);
+  box-shadow: 0 0 18px 6px rgb(255 122 26 / 0.55);
+  animation: scan 1.8s ease-in-out infinite alternate;
+}
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #17120e 0px, #2a211a 120px, #17120e 240px);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 2px;
+  border-radius: 999px;
+  background: var(--color-teal);
+  animation: blink 1.2s infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.15s; }
+.dot:nth-child(3) { animation-delay: 0.3s; }
+.glow {
+  animation: glow 2.4s ease-in-out infinite;
+}
+.dropzone {
+  border: 1.5px dashed var(--color-line);
+  border-radius: 14px;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.dropzone:hover,
+.dropzone.active {
+  border-color: var(--color-teal);
+  background: rgb(255 122 26 / 0.06);
+}
+.dropzone.active {
+  transform: scale(1.01);
+}
+.tile {
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #16110d, #0c0a08);
+  padding: 1rem 1.1rem;
+}
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e8401c, #ff7a1a 60%, #ffb340);
+  transition: width 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .skeleton, .dot, .glow, .scan-frame.scanning::after { animation: none; }
+}
