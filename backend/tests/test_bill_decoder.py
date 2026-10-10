@@ -164,6 +164,10 @@ def test_calc_handles_what_the_model_actually_wrote():
     assert calc.evaluate("sum([u > 200 for u in [239, 203, 96]])") == 2
     assert calc.evaluate("count_above([239, 203, 96], 200)") == 2
     assert calc.evaluate("max(r[1] for r in [[1, 52906], [2, 23954]])") == 52906
+    assert calc.render("Average {avg_u:1} units.", {"hist": "[781, 225, -142]", "avg_u": "avg(hist)"}) == \
+        "Average 288 units."
+    with pytest.raises(calc.CalcError):
+        calc.render("{hist}", {"hist": "[1, 2]"})
     assert calc.evaluate_all({"total_cost": "3430.24", "per_unit": "total_cost / 151"})["per_unit"] == \
         pytest.approx(22.717, abs=1e-3)
 
@@ -235,6 +239,15 @@ def test_missing_image_still_writes_a_valid_row(tmp_path):
     client = Client(settings(tmp_path), mock=lambda p: json.dumps({"answers": []}))
     pipeline.run(client, DATA / "bills", csv_dir, out_dir)
     assert package.check_outputs(out_dir, csv_dir) == []
+
+
+def test_small_images_are_upscaled(tmp_path):
+    from PIL import Image as PILImage
+    from bill_decoder import imaging
+    path = tmp_path / "LESCO_1.png"
+    PILImage.new("RGB", (360, 400), "white").save(path)
+    loaded = PILImage.open(__import__("io").BytesIO(imaging.load(path).data))
+    assert loaded.size == (1080, 1200)  # 3x, the upscale cap
 
 
 def test_level1_csv_quotes_json_like_the_guide(tmp_path):

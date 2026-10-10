@@ -55,7 +55,7 @@ class CalcError(ValueError):
     pass
 
 
-def evaluate(expression: str, names: dict | None = None) -> float:
+def evaluate(expression: str, names: dict | None = None, allow_list: bool = False):
     try:
         value = _eval(ast.parse(str(expression).strip(), mode="eval").body, dict(names or {}))
     except CalcError:
@@ -64,6 +64,8 @@ def evaluate(expression: str, names: dict | None = None) -> float:
         raise CalcError(f"cannot evaluate {expression!r}: {exc}") from exc
     if isinstance(value, bool):
         return int(value)
+    if allow_list and isinstance(value, list):
+        return value
     if not isinstance(value, (int, float)):
         raise CalcError(f"{expression!r} is not a single number")
     return value
@@ -139,11 +141,12 @@ def _bind(target, value, scope: dict) -> None:
         raise CalcError("unsupported loop variable")
 
 
-def evaluate_all(calcs: dict[str, str]) -> dict[str, float]:
-    """Evaluate in order; later calculations may use the names of earlier ones."""
-    values: dict[str, float] = {}
+def evaluate_all(calcs: dict[str, str]) -> dict:
+    """Evaluate in order; later calculations may use the names of earlier ones.
+    A calculation may be a list (e.g. a usage history) that later ones aggregate."""
+    values: dict = {}
     for name, expression in (calcs or {}).items():
-        values[name] = evaluate(expression, values)
+        values[name] = evaluate(expression, values, allow_list=True)
     return values
 
 
@@ -166,6 +169,8 @@ def render(template: str, calcs: dict[str, str]) -> str:
         name, decimals = match.group(1), match.group(2)
         if name not in values:
             raise CalcError(f"placeholder {{{name}}} has no calculation")
+        if isinstance(values[name], list):
+            raise CalcError(f"placeholder {{{name}}} is a list, not a number")
         return format_number(values[name], int(decimals) if decimals else 2)
 
     return _PLACEHOLDER.sub(fill, template)

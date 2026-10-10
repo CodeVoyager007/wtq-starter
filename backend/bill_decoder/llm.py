@@ -59,6 +59,7 @@ class Client:
         self.cache_dir = Path(settings.cache_dir) / settings.model
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._key_index = 0
+        self._high_detail = True  # request high image detail; switched off if the model rejects it
         self._sdk = None
 
     # ------------------------------------------------------------ public
@@ -95,7 +96,7 @@ class Client:
         contents = [prompt]
         if image:
             contents = [types.Part.from_bytes(data=image.data, mime_type=image.mime_type), prompt]
-        config = types.GenerateContentConfig(
+        config_args = dict(
             system_instruction=system,
             temperature=0,
             top_k=1,
@@ -109,8 +110,13 @@ class Client:
         for attempt in range(MAX_ATTEMPTS):
             self.limiter.wait()
             try:
+                if image and self._high_detail:
+                    config_args["media_resolution"] = types.MediaResolution.MEDIA_RESOLUTION_HIGH
+                else:
+                    config_args.pop("media_resolution", None)
                 response = self._client().models.generate_content(
-                    model=self.settings.model, contents=contents, config=config
+                    model=self.settings.model, contents=contents,
+                    config=types.GenerateContentConfig(**config_args),
                 )
                 if response.text:
                     return response.text
@@ -118,6 +124,10 @@ class Client:
             except Exception as exc:  # SDK raises several error types; classify by message
                 last_error = exc
                 message = str(exc)
+                if self._high_detail and "resolution" in message.lower():
+                    log.warning("model does not accept media_resolution; continuing without it")
+                    self._high_detail = False
+                    continue
                 if any(code in message for code in ("400", "INVALID_ARGUMENT", "401", "403", "PERMISSION_DENIED", "404", "NOT_FOUND")):
                     raise LLMError(f"request rejected: {message[:300]}") from exc
                 if "429" in message or "RESOURCE_EXHAUSTED" in message:
