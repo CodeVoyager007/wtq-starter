@@ -15,9 +15,9 @@
   #tint { mix-blend-mode: multiply; }
   #json { display: flex; align-items: center; justify-content: center;
           font: 700 92px JBMono, monospace; color: #fff; letter-spacing: -1px;
-          text-shadow: 0 0 30px rgba(255,122,26,.9), 0 0 4px #000; white-space: pre; }
+          text-shadow: none; white-space: pre; }
   #json .k { color: var(--amber); }
-  #json .pill { background: rgba(5,5,5,.86); padding: 18px 40px; border-left: 10px solid var(--orange); box-shadow: 0 20px 60px rgba(0,0,0,.6); position: absolute; bottom: 150px; font-size: 64px; }
+  #json .pill { background: rgba(5,5,5,.88); padding: 14px 30px; border-left: 3px solid var(--orange); position: absolute; bottom: 160px; font-size: 44px; font-weight: 500; }
   #ribbons { perspective: 900px; }
   .rib { position: absolute; top: -10%; height: 120%; transform-origin: center; mix-blend-mode: screen; border-radius: 40%; }
   #titleWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -27,8 +27,8 @@
   #titleSolid { position: absolute; inset: 0; font: inherit; letter-spacing: inherit; color: transparent;
            background: linear-gradient(180deg, #ffd29a 0%, var(--amber) 22%, var(--orange) 55%, var(--ember) 100%);
            -webkit-background-clip: text; background-clip: text; }
-  #sub { font: 64px Bebas, sans-serif; letter-spacing: 22px; color: #f4e9dc; margin-top: 26px; padding-left: 22px; }
-  #rule { height: 3px; width: 0; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin-top: 18px; }
+  #sub { font: 500 24px JBMono, monospace; letter-spacing: 12px; text-transform: uppercase; color: #b9ada0; margin-top: 30px; padding-left: 12px; }
+  #rule { height: 2px; width: 0; background: var(--orange); margin-top: 22px; }
   #flash { background: #fff; }
   #vignette { background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.85) 100%); }
   .bar { position: absolute; left: 0; right: 0; height: 120px; background: #000; z-index: 50; }
@@ -136,10 +136,10 @@ function render(t) {
     $('title').style.opacity = k;
     $('title').style.backgroundPosition = `${50 + (t - T0) * 12}% ${30 + (t - T0) * 18}%`;
     $('titleSolid').style.opacity = ease((t - T0 - 0.55) / 0.6);
-    $('title').style.filter = `drop-shadow(0 0 ${lerp(60, 18, ease((t - T0) / 1.2))}px rgba(255,122,26,.75))`;
-    $('rule').style.width = `${ease((t - T0 - 0.35) / 0.7) * 1100}px`;
+    $('title').style.filter = `drop-shadow(0 0 ${lerp(40, 0, ease((t - T0) / 1.0))}px rgba(255,122,26,${lerp(.6, 0, ease((t - T0) / 1.0))}))`;
+    $('rule').style.width = `${ease((t - T0 - 0.35) / 0.9) * 220}px`;
     $('sub').style.opacity = ease((t - T0 - 0.6) / 0.5);
-    $('sub').style.letterSpacing = `${lerp(40, 22, ease((t - T0 - 0.6) / 1.2))}px`;
+    $('sub').style.letterSpacing = `${lerp(20, 12, ease((t - T0 - 0.6) / 1.6))}px`;
   } else { $('title').style.opacity = 0; $('rule').style.width = 0; $('sub').style.opacity = 0; }
   $('titleWrap').style.opacity = t < 6.9 ? 1 : 1 - clamp((t - 6.9) / 0.6);
 

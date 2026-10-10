@@ -2,67 +2,52 @@
 <html><head><meta charset="utf-8"><title>Chapter Card</title>
 <link rel="stylesheet" href="common.css">
 <style>
-  #bgnum { position: absolute; right: -60px; top: -140px; font: 1300px/1 Anton; color: rgba(255,122,26,.045); }
-  #wrap { display: flex; align-items: center; padding-left: 220px; gap: 70px; }
-  #num { font: 420px/0.8 Anton; color: transparent; -webkit-text-stroke: 4px var(--orange); position: relative; }
-  #numFill { position: absolute; inset: 0; color: var(--orange); -webkit-text-stroke: 0; clip-path: inset(100% 0 0 0);
-             text-shadow: 0 0 40px rgba(255,122,26,.5); }
-  #txt { display: flex; flex-direction: column; gap: 10px; }
-  #titleBox { position: relative; }
-  .title { font: 200px/0.9 Anton; text-transform: uppercase; letter-spacing: 4px; color: var(--cream); }
-  .slice { position: absolute; left: 0; top: 0; }
-  #sub { font: 52px Bebas; letter-spacing: 10px; color: var(--amber); }
-  #bar { position: absolute; left: 220px; bottom: 220px; height: 6px; background: linear-gradient(90deg, var(--ember), var(--orange)); box-shadow: 0 0 24px var(--orange); }
+  #plateWrap { position: absolute; inset: 0; overflow: hidden; }
+  #shade { background: linear-gradient(90deg, rgba(5,5,5,.92) 0%, rgba(5,5,5,.55) 55%, rgba(5,5,5,.85) 100%); }
+  #block { position: absolute; left: 240px; top: 50%; transform: translateY(-50%); }
+  #lbl { margin-bottom: 34px; }
+  #mask { overflow: hidden; padding-bottom: 6px; }
+  #title { font: 150px/0.95 Anton; letter-spacing: 10px; text-transform: uppercase; color: var(--cream); }
+  #rule { height: 2px; background: var(--orange); margin: 34px 0 30px; width: 0; }
+  #sub { font: 300 38px var(--text); letter-spacing: 1px; color: #cfc4b8; }
 </style></head>
 <body><div id="stage">
-  <div class="layer glow"></div>
-  <div id="bgnum"></div>
-  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
-  <div id="wrap" class="layer">
-    <div id="num"><span id="n"></span><span id="numFill"></span></div>
-    <div id="txt"><div class="kicker" id="kick">CHAPTER</div>
-      <div id="titleBox"><div class="title" id="title"></div></div>
-      <div id="sub"></div></div>
+  <div id="plateWrap"><div id="plate" class="plate"></div></div>
+  <div id="shade" class="layer"></div>
+  <div id="block">
+    <div class="label" id="lbl"></div>
+    <div id="mask"><div id="title"></div></div>
+    <div id="rule"></div>
+    <div id="sub"></div>
   </div>
-  <div id="bar"></div><div class="sweep" id="sw"></div>
   <div class="layer vignette"></div>
   <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
+  <div class="lb t"></div><div class="lb b"></div>
 </div>
 <script src="common.js"></script>
 <script>
-window.DUR = 2.8;
-const SL = 7; let slices = [];
+window.DUR = 3.0;
+const PLATES = ['logo_raw', 'calc_raw', 'usage_raw', 'history_raw'];
+const idx = Number(params.get('i') || 0);
 window.assetsReady = loadJSON('data/project.json').then(p => {
-  const c = p.chapters[Number(params.get('i') || 0)];
-  $('n').textContent = c.num; $('numFill').textContent = c.num; $('bgnum').textContent = c.num;
+  const c = p.chapters[idx];
+  $('lbl').innerHTML = `Chapter <b>${c.num}</b> / ${String(p.chapters.length).padStart(2, '0')}`;
   $('title').textContent = c.title; $('sub').textContent = c.sub;
-  for (let i = 0; i < SL; i++) { // glitch slices of the title
-    const d = document.createElement('div'); d.className = 'title slice'; d.textContent = c.title;
-    d.style.clipPath = `inset(${i * 100 / SL}% 0 ${100 - (i + 1) * 100 / SL}% 0)`;
-    $('titleBox').appendChild(d); slices.push(d);
-  }
-  return document.fonts.ready;
+  $('plate').style.backgroundImage = `url(../assets/panels/${PLATES[idx % PLATES.length]}.jpg)`;
+  return loadImages([`../assets/panels/${PLATES[idx % PLATES.length]}.jpg`]);
 }).then(() => render(0));
 window.render = t => {
-  const out = 1 - clamp((t - 2.45) / 0.35);
-  $('num').style.transform = `translateX(${lerp(-120, 0, ease(t / 0.6))}px) scale(${lerp(1.2, 1, ease(t / 0.6))})`;
-  $('num').style.opacity = ease(t / 0.3) * out;
-  $('numFill').style.clipPath = `inset(${100 - 100 * easeIO((t - 0.25) / 0.7)}% 0 0 0)`;
-  $('bgnum').style.transform = `translateX(${lerp(80, -40, t / 2.8)}px)`;
-  // Glitch-slice reveal: slices fly in from alternating sides, real title takes over once settled
-  const gk = (t - 0.15) / 0.55;
-  slices.forEach((el, i) => {
-    const k = ease(gk - i * 0.05), dir = i % 2 ? 1 : -1;
-    el.style.transform = `translateX(${dir * lerp(260, 0, k) + (k < 1 ? Math.sin(t * 80 + i) * 8 * (1 - k) : 0)}px)`;
-    el.style.opacity = clamp(gk * 3) * (gk < 1.1 ? 1 : 0) * out;
-    el.style.color = i % 3 === 0 && k < 0.9 ? 'var(--orange)' : 'var(--cream)';
-  });
-  $('title').style.opacity = gk >= 1.1 ? out : 0;
-  $('sub').style.opacity = ease((t - 0.55) / 0.4) * out; $('kick').style.opacity = ease((t - 0.4) / 0.4) * out;
-  $('sub').style.letterSpacing = `${lerp(26, 10, ease((t - 0.55) / 1))}px`;
-  $('bar').style.width = `${1480 * easeIO(t / 2.4)}px`; $('bar').style.opacity = out;
-  sweep($('sw'), (t - 0.2) / 1.0);
-  embers($('emb'), t + 3, 60, out);
+  // Depth plate: slow push and drift for the whole shot
+  $('plate').style.transform = `scale(${lerp(1.0, 1.08, t / 3)}) translateX(${lerp(0, -40, t / 3)}px)`;
+  const out = 1 - clamp((t - 2.6) / 0.4);
+  $('lbl').style.opacity = easeS((t - 0.15) / 0.6) * out;
+  const k = easeS((t - 0.3) / 0.9);
+  $('title').style.transform = `translateY(${lerp(110, 0, k)}%)`;
+  $('title').style.opacity = out;
+  $('rule').style.width = `${260 * easeS((t - 0.8) / 0.9)}px`; $('rule').style.opacity = out;
+  $('sub').style.opacity = easeS((t - 1.0) / 0.7) * out;
+  $('sub').style.transform = `translateY(${lerp(12, 0, easeS((t - 1.0) / 0.7))}px)`;
+  $('stage').style.opacity = easeS(t / 0.4);
   grain($('grain'), t);
 };
 </script></body></html>

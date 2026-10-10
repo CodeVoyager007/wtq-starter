@@ -3,46 +3,42 @@
 <link rel="stylesheet" href="common.css">
 <style>
   #head { position: absolute; left: 100px; top: 60px; display: flex; align-items: baseline; gap: 28px; }
-  #head h1 { margin: 0; font: 64px Anton; letter-spacing: 3px; text-transform: uppercase; }
-  #count { position: absolute; right: 100px; top: 72px; font: 40px Bebas; letter-spacing: 8px; color: var(--dim); }
+  #head h1 { margin: 0; font: 54px Anton; letter-spacing: 8px; text-transform: uppercase; color: var(--cream); }
+  #count { position: absolute; right: 100px; top: 76px; font: 500 20px JBMono, monospace; letter-spacing: 5px; color: var(--dim); }
   #count b { color: var(--orange); font-weight: normal; }
   #card { position: absolute; left: 100px; width: 1080px; top: 180px; }
-  #q { font: 72px/1.05 Anton; color: var(--cream); display: flex; gap: 28px; }
-  #qbadge { flex: none; font: 72px Anton; color: var(--ink); background: var(--orange); width: 88px; height: 88px;
-            text-align: center; line-height: 88px; border-radius: 8px; box-shadow: 0 0 30px rgba(255,122,26,.5); }
+  #q { font: 300 62px/1.15 var(--text); color: var(--cream); display: flex; flex-direction: column; gap: 22px; letter-spacing: -0.5px; }
+  #qbadge { font: 500 20px JBMono, monospace; letter-spacing: 5px; color: var(--orange); }
   #qtxt span { display: inline-block; white-space: pre; }
   #calc { display: inline-flex; gap: 18px; align-items: center; margin-top: 40px; padding: 16px 26px; border-radius: 10px;
-          background: #0c0a09; box-shadow: inset 0 0 0 2px rgba(255,122,26,.45), 0 0 40px rgba(255,122,26,.15);
+          background: transparent; box-shadow: inset 0 0 0 1px rgba(255,122,26,.5);
           font: 600 30px JBMono, monospace; color: #8fd3ff; position: relative; overflow: hidden; }
-  #calc span { font: 26px Bebas; letter-spacing: 6px; color: var(--amber); }
+  #calc span { font: 500 18px JBMono, monospace; letter-spacing: 5px; color: var(--dim); }
   #calcShine { position: absolute; top: 0; bottom: 0; width: 120px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); }
-  #a { margin-top: 40px; font: 500 34px/1.5 JBMono, monospace; color: var(--cream);
-       border-left: 6px solid var(--orange); padding-left: 30px; min-height: 260px; }
-  #a .cur { display: inline-block; width: 16px; height: 34px; background: var(--orange); vertical-align: -5px; margin-left: 4px; }
-  #grounded { margin-top: 26px; font: 30px Bebas; letter-spacing: 8px; color: #7ad87a; }
+  #a { margin-top: 40px; font: 400 32px/1.55 JBMono, monospace; color: var(--cream);
+       border-left: 2px solid var(--orange); padding-left: 30px; min-height: 260px; color: #e6dccf; }
+  #a .cur { display: inline-block; width: 14px; height: 30px; background: var(--orange); vertical-align: -5px; margin-left: 4px; }
+  #grounded { margin-top: 26px; font: 500 18px JBMono, monospace; letter-spacing: 5px; color: var(--dim); text-transform: uppercase; }
   #srcWrap { position: absolute; left: 1260px; top: 180px; width: 560px; }
-  #srcLbl { font: 28px Bebas; letter-spacing: 10px; color: var(--dim); margin-bottom: 14px; }
+  #srcLbl { font: 500 18px JBMono, monospace; letter-spacing: 5px; color: var(--dim); margin-bottom: 16px; }
   #view { position: relative; width: 560px; height: 700px; overflow: hidden; border-radius: 14px; background: #111;
-          box-shadow: 0 0 0 2px rgba(255,122,26,.35), 0 30px 80px rgba(0,0,0,.6); }
+          box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 40px 100px rgba(0,0,0,.7); }
   #cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
   #cam img { display: block; }
-  #box { position: absolute; border: 5px solid var(--orange); border-radius: 6px;
-         box-shadow: 0 0 0 4000px rgba(0,0,0,.5), 0 0 30px var(--orange); }
+  #box { position: absolute; border: 3px solid var(--orange); border-radius: 4px; box-shadow: 0 0 0 4000px rgba(0,0,0,.55); }
 </style></head>
 <body><div id="stage">
-  <div class="layer glow"></div>
-  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
-  <div id="head"><span class="kicker">LEVEL 2</span><h1>Ask the bill</h1></div>
+  <div class="layer" style="background: radial-gradient(ellipse at 30% 40%, #14110e, #050505 70%)"></div>
+  <div id="head"><span class="label">Level <b>2</b></span><h1>Ask the bill</h1></div>
   <div id="count"></div>
   <div id="card">
-    <div id="q"><div id="qbadge">Q</div><div id="qtxt"></div></div>
-    <div id="calc"><span>COMPUTED</span><div id="calcTxt"></div><div id="calcShine"></div></div>
+    <div id="q"><div id="qbadge"></div><div id="qtxt"></div></div>
+    <div id="calc"><span>COMPUTED</span><div id="calcTxt"></div></div>
     <div id="a"></div>
     <div id="grounded"></div>
   </div>
   <div id="srcWrap"><div id="srcLbl">SOURCE ON THE BILL</div>
     <div id="view"><div id="cam"><img id="bill"><div id="box"></div></div></div></div>
-  <div class="sweep" id="sw"></div>
   <div class="layer vignette"></div>
   <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
 </div>
@@ -73,31 +69,28 @@ window.render = t => {
     $('calcTxt').textContent = it.calc;
   }
   [...$('qtxt').children].forEach((w, j) => {
-    const k = ease((lt - 0.1 - j * 0.07) / 0.35);
-    w.style.opacity = k; w.style.transform = `translateY(${lerp(40, 0, k)}px)`; w.style.filter = `blur(${(1 - k) * 10}px)`;
+    const k = easeS((lt - 0.15 - j * 0.06) / 0.7);
+    w.style.opacity = k; w.style.transform = `translateY(${lerp(14, 0, k)}px)`;
   });
-  $('qbadge').style.transform = `scale(${lerp(0.3, 1, ease(lt / 0.3))}) rotate(${lerp(-25, 0, ease(lt / 0.3))}deg)`;
-  const ck = ease((lt - 0.8) / 0.35);
-  $('calc').style.opacity = ck; $('calc').style.transform = `translateX(${lerp(-40, 0, ck)}px)`;
-  $('calcShine').style.left = `${lerp(-150, 1100, clamp((lt - 1.0) / 0.7))}px`;
+  $('qbadge').textContent = `Question ${String(i + 1).padStart(2, '0')}`; $('qbadge').style.opacity = easeS(lt / 0.5);
+  const ck = easeS((lt - 0.9) / 0.7);
+  $('calc').style.opacity = ck; $('calc').style.transform = `translateY(${lerp(10, 0, ck)}px)`;
   const n = Math.floor(clamp((lt - 1.6) * CPS, 0, it.a.length));
   const typing = n < it.a.length && lt > 1.6;
   $('a').innerHTML = it.a.slice(0, n).replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     (typing || Math.floor(lt * 2) % 2 ? '<span class="cur"></span>' : '');
   $('grounded').style.opacity = ease((lt - 1.6 - it.a.length / CPS - 0.1) / 0.4);
   // Source panel: fly from the whole bill to this answer's region
-  const a = cam(null), b = cam(it.source), m = easeIO((lt - 0.5) / 1.0);
+  const a = cam(null), b = cam(it.source), m = easeS((lt - 0.4) / 1.6);
   const s = lerp(a.s, b.s, m), cx = lerp(a.cx, b.cx, m), cy = lerp(a.cy, b.cy, m);
   $('cam').style.transform = `translate(${VW / 2 - cx * s}px, ${VH / 2 - cy * s}px) scale(${s})`;
   const bx = it.source;
-  $('box').style.opacity = bx ? ease((lt - 1.4) / 0.3) : 0;
+  $('box').style.opacity = bx ? easeS((lt - 1.7) / 0.6) : 0;
   if (bx) Object.assign($('box').style, { left: bx[0] - 6 + 'px', top: bx[1] - 4 + 'px', width: bx[2] - bx[0] + 12 + 'px',
     height: bx[3] - bx[1] + 8 + 'px', borderWidth: `${clamp(4 / s, 3, 10)}px` });
   $('srcWrap').style.opacity = ease(t / 0.6) * (i === items.length - 1 ? out : 1);
-  $('count').innerHTML = `QUESTION <b>${i + 1}</b> / ${items.length}`;
+  $('count').textContent = `${String(i + 1).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}`;
   $('head').style.opacity = ease(t / 0.5);
-  sweep($('sw'), lt / 0.9);
-  embers($('emb'), t, 40, 0.6);
   grain($('grain'), t);
 };
 </script></body></html>

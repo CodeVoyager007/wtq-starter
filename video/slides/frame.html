@@ -7,20 +7,20 @@
   #bg { position: absolute; inset: 0; background: var(--ink);
         -webkit-mask: linear-gradient(#000 0 0) , linear-gradient(#000 0 0); }
   #win { position: absolute; left: 192px; top: 64px; width: 1536px; height: 900px; border-radius: 14px;
-         box-shadow: 0 0 0 2px rgba(255,122,26,.5), 0 0 80px rgba(255,122,26,.25); }
+         box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 40px 120px rgba(0,0,0,.8); }
   #bar { position: absolute; left: 0; right: 0; top: 0; height: 36px; background: #16120f; border-radius: 14px 14px 0 0;
          display: flex; align-items: center; gap: 10px; padding-left: 18px; }
   .dot { width: 14px; height: 14px; border-radius: 50%; }
   #wtitle { position: absolute; left: 0; right: 0; text-align: center; font: 500 18px JBMono, monospace; color: var(--dim); }
   #cap { position: absolute; left: 192px; right: 192px; top: 984px; display: flex; align-items: center; gap: 24px; }
-  #cap .num { font: 44px Anton; color: var(--orange); }
-  #cap .txt { font: 40px Bebas; letter-spacing: 6px; color: var(--cream); }
+  #cap .num { font: 500 20px JBMono, monospace; letter-spacing: 5px; color: var(--orange); }
+  #cap .txt { font: 300 32px var(--text); color: #e6dccf; }
 </style></head>
 <body><div id="stage">
   <svg class="layer" width="1920" height="1080"><defs><mask id="m"><rect width="1920" height="1080" fill="#fff"/>
     <rect x="192" y="100" width="1536" height="864" fill="#000"/></mask></defs>
     <rect width="1920" height="1080" fill="#050505" mask="url(#m)"/>
-    <ellipse cx="960" cy="1150" rx="1100" ry="300" fill="rgba(255,122,26,.12)" mask="url(#m)"/></svg>
+</svg>
   <div id="win"><div id="bar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div>
     <div class="dot" style="background:#28c840"></div><div id="wtitle"></div></div></div>
   <div id="cap"><div class="num" id="cnum"></div><div class="txt" id="ctxt"></div></div>

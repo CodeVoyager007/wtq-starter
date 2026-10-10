@@ -66,37 +66,58 @@ prog = [(57, [57, 60, 64]), (53, [53, 57, 60]), (48, [55, 60, 64]), (55, [55, 59
 BAR = 4 * BEAT
 drop, outro, dur = cues["drop"], cues["outro"], cues["duration"]
 
+def saw(f, d, bright=1.6, harm=18):
+    t = tt(d); s = np.zeros_like(t)
+    for h in range(1, harm + 1):
+        if f * h > 9000: break
+        s += np.sin(2 * np.pi * f * h * t) / h ** bright
+    return s
+
+def cello(f, d):  # bowed low-string ostinato note: soft attack, dark tone, slight swell
+    t = tt(d); e = np.clip(t / 0.03, 0, 1) * np.exp(-t / (d * 0.9))
+    return saw(f, d, 2.0) * e
+
+def braam(f, d=3.2):  # low brass-like swell for chapter hits
+    t = tt(d); e = np.clip(t / 0.25, 0, 1) ** 2 * np.exp(-np.clip(t - 0.4, 0, None) / 1.1)
+    s = sum(saw(f * m, d, 1.4) for m in (1, 1.5, 2)) + 0.6 * np.sin(2 * np.pi * f / 2 * t)
+    return s * e
+
+def tick():
+    t = tt(0.03); return np.sin(2 * np.pi * 2600 * t) * np.exp(-t / 0.004)
+
 # Intro: low drone that swells into the title slam
 add(pad_note(midi(45), drop + 0.5), 0, 0.35)
 add(pad_note(midi(33), drop + 0.5), 0, 0.25)
 
-# Main bed: chord pads, arpeggio, sub pulse, kick and hats from the drop until the outro
+# Main bed: dark pads, eighth-note low string ostinato, soft kick on the downbeat, clock tick
 t0 = drop; bar = 0
 while t0 < outro:
     root, chord = prog[(bar // 2) % 4]
     if bar % 2 == 0:
-        add(pad_note(midi(root), min(2 * BAR, outro - t0 + 0.8)), t0, 0.22, -0.3)
-        add(pad_note(midi(chord[2]), min(2 * BAR, outro - t0 + 0.8)), t0, 0.12, 0.3)
-    arp = [chord[0] + 12, chord[1] + 12, chord[2] + 12, chord[1] + 24]
-    for s in range(8):  # eighth notes
-        ts = t0 + s * BEAT / 2
+        L2 = min(2 * BAR, outro - t0 + 0.8)
+        add(pad_note(midi(root - 12), L2), t0, 0.20, -0.3)
+        add(pad_note(midi(chord[1] - 12), L2), t0, 0.12, 0.3)
+    for s8 in range(8):
+        ts = t0 + s8 * BEAT / 2
         if ts >= outro: break
-        add(pluck(midi(arp[s % 4])), ts, 0.13 if s % 2 == 0 else 0.09, 0.4 if s % 2 else -0.4)
-        add(sub(midi(root - 12), BEAT / 2), ts, 0.28)
-        if s % 2 == 1: add(hat(), ts, 0.10, 0.2)
-    for b in (0, 2):
-        if t0 + b * BEAT < outro: add(kick(), t0 + b * BEAT, 0.55)
+        accent = 1.0 if s8 % 4 == 0 else 0.7
+        add(cello(midi(root - 12), BEAT / 2 * 0.95), ts, 0.16 * accent, -0.15)
+        add(cello(midi(root), BEAT / 2 * 0.95), ts, 0.06 * accent, 0.15)
+        if s8 % 2 == 0: add(tick(), ts, 0.05, 0.5)
+    if t0 < outro: add(kick(), t0, 0.45)
     t0 += BAR; bar += 1
 
-# Chapter hits with a swell into each one
+# Chapter hits: swell into a braam with a sub boom
 for h in cues.get("hits", []):
-    add(swell(), h - 1.2, 0.25)
-    add(impact(), h, 0.7)
+    add(swell(), h - 1.2, 0.18)
+    add(braam(midi(33)), h, 0.22)
+    add(impact(), h, 0.5)
 
-# Outro: big final chord that rings out
-add(impact(), outro, 0.8)
-for n in (45, 57, 60, 64, 69):
-    add(pad_note(midi(n), dur - outro + 0.2), outro, 0.16, (n % 3 - 1) * 0.3)
+# Outro: final braam and a long dark chord
+add(braam(midi(33), 4.0), outro, 0.25)
+add(impact(), outro, 0.6)
+for n in (33, 45, 52, 57, 60):
+    add(pad_note(midi(n), dur - outro + 0.2), outro, 0.14, (n % 3 - 1) * 0.3)
 
 # Cheap stereo reverb: convolve with decaying noise
 def reverb(x, seed):

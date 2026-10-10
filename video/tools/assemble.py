@@ -53,7 +53,7 @@ def clip(s, idx):
     ff(*trim, '-i', src, '-loop', '1', '-i', f'{fr}/f00000.png', '-filter_complex',
        f'[0:v]setpts=PTS/{spd},fps={FPS},scale=1536:864:force_original_aspect_ratio=decrease,pad=1536:864:(ow-iw)/2:(oh-ih)/2:color=0x0f0d0b[v];'
        f'color=c=black:s=1920x1080:r={FPS}[bg];[bg][v]overlay=192:100:shortest=1[b];[b][1:v]overlay=0:0:shortest=1,'
-       f"scale=w='trunc(1920*(1+0.07*pow(max(0,1-t/0.9),2))/2)*2':h=-2:eval=frame,crop=1920:1080,format=yuv420p",
+       f"scale=w='trunc(1920*(1+0.03*pow(max(0,1-t/1.4),2))/2)*2':h=-2:eval=frame,crop=1920:1080,format=yuv420p",
        '-an', '-c:v', 'libx264', '-crf', '16', '-preset', 'fast', out)
     return out
 
@@ -73,12 +73,9 @@ if total > MAX_SEC: sys.exit(f'ERROR: {total:.1f}s is over the 3 minute limit. T
 
 # Transitions between segments (xfade); per-segment "transition" in timeline.json overrides the default.
 def pick(prev, nxt):
-    if nxt == 'outro': return 'fadeblack', 0.6
-    if prev == 'intro': return 'fade', 0.6
-    if nxt == 'chapter': return ('fadewhite', 0.4) if prev == 'slide' else ('radial', 0.5)
-    if prev == 'chapter': return 'circleopen', 0.6
-    if nxt == 'slide': return 'smoothleft', 0.6
-    return 'fade', 0.4
+    # Cinematic grammar: dips to black into chapter cards and the end, soft dissolves elsewhere.
+    if nxt in ('chapter', 'outro') or prev == 'intro': return 'fadeblack', 0.5
+    return 'fade', 0.35
 segs = tl['segments']; trans = []
 for i in range(1, len(parts)):
     name, T = pick(segs[i - 1]['type'], segs[i]['type'])

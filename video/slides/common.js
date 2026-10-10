@@ -39,3 +39,6 @@ function sweep(el, k) {
   el.style.opacity = k > 0 && k < 1 ? 1 : 0;
   el.style.transform = `translateX(${lerp(-1400, 2600, easeIO(k))}px) skewX(-20deg)`;
 }
+// Slow cinematic ease (long tails) and a constant push-in used on every shot.
+const easeS = x => { x = clamp(x); return x < .5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2; };
+const push = (el, t, dur, from = 1.0, to = 1.05) => { el.style.transform = `scale(${lerp(from, to, clamp(t / dur))})`; };

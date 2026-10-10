@@ -2,64 +2,66 @@
 <html><head><meta charset="utf-8"><title>Outro Card</title>
 <link rel="stylesheet" href="common.css">
 <style>
-  #wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  #stats { display: flex; gap: 120px; margin-bottom: 70px; }
-  .stat { text-align: center; }
-  .stat .v { font: 190px/0.9 Anton; background: linear-gradient(180deg, #ffd29a, var(--orange) 55%, var(--ember));
-             -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 24px rgba(255,122,26,.45)); }
-  .stat .l { font: 34px Bebas; letter-spacing: 8px; color: var(--cream); margin-top: 14px; max-width: 420px; }
-  #name { font: 110px Anton; letter-spacing: 6px; text-transform: uppercase; color: var(--cream); }
-  #rule { height: 3px; width: 0; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin: 18px 0 24px; }
-  #by { font: 40px Bebas; letter-spacing: 12px; color: var(--amber); }
+  #plateWrap { position: absolute; inset: 0; overflow: hidden; }
+  #shade { background: radial-gradient(ellipse at center, rgba(5,5,5,.6), rgba(5,5,5,.95) 75%); }
   .rib { position: absolute; top: -10%; height: 120%; mix-blend-mode: screen; border-radius: 40%; }
-  #meta { font: 500 26px JBMono, monospace; color: var(--dim); margin-top: 26px; }
+  #wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #name { font: 120px Anton; letter-spacing: 14px; text-transform: uppercase; color: var(--cream); }
+  #rule { height: 2px; width: 0; background: var(--orange); margin: 26px 0 30px; }
+  #stats { display: flex; gap: 110px; margin-bottom: 64px; }
+  .stat { text-align: center; }
+  .stat .v { font: 200 120px/1 var(--text); color: var(--cream); letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+  .stat .l { margin-top: 14px; }
+  #by { font: 300 34px var(--text); color: #cfc4b8; letter-spacing: 1px; }
+  #meta { margin-top: 22px; }
 </style></head>
 <body><div id="stage">
-  <div class="layer glow"></div>
+  <div id="plateWrap"><div id="plate" class="plate" style="background-image:url(../assets/panels/calc_raw.jpg)"></div></div>
+  <div id="shade" class="layer"></div>
   <div id="ribs" class="layer"></div>
-  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
   <div id="wrap" class="layer">
     <div id="stats"></div>
     <div id="name"></div><div id="rule"></div>
-    <div id="by"></div><div id="meta"></div>
+    <div id="by"></div><div class="label" id="meta"></div>
   </div>
   <div class="layer vignette"></div>
   <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
+  <div class="lb t"></div><div class="lb b"></div>
 </div>
 <script src="common.js"></script>
 <script>
-window.DUR = 5.5;
+window.DUR = 6;
+let stats = [];
+// Brief Netflix-style ribbon callback to the intro
 const ribs = []; { let sd = 5; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const pal = ['#ff7a1a', '#e8401c', '#ffb340', '#ffd29a'];
-  for (let i = 0; i < 34; i++) { const el = document.createElement('div'); el.className = 'rib'; const c = pal[i % 4];
-    el.style.background = `linear-gradient(180deg, transparent, ${c} 30%, ${c} 70%, transparent)`; el.style.boxShadow = `0 0 30px ${c}`;
-    document.getElementById('ribs').appendChild(el); ribs.push({ el, x: r(), w: 3 + Math.pow(r(), 2) * 40 }); } }
-let stats = [];
-window.assetsReady = loadJSON('data/project.json').then(p => {
-  $('stats').innerHTML = p.stats.map(s => `<div class="stat"><div class="v" data-v="${s.value}">0</div><div class="l">${s.label}</div></div>`).join('');
+  for (let i = 0; i < 30; i++) { const el = document.createElement('div'); el.className = 'rib'; const c = pal[i % 4];
+    el.style.background = `linear-gradient(180deg, transparent, ${c} 30%, ${c} 70%, transparent)`;
+    document.getElementById('ribs').appendChild(el); ribs.push({ el, x: r(), w: 2 + Math.pow(r(), 2) * 34 }); } }
+window.assetsReady = Promise.all([loadJSON('data/project.json'), loadImages(['../assets/panels/calc_raw.jpg'])]).then(([p]) => {
+  $('stats').innerHTML = p.stats.map(s => `<div class="stat"><div class="v" data-v="${s.value}">0</div><div class="label l">${s.label}</div></div>`).join('');
   stats = [...document.querySelectorAll('.stat')];
   $('name').textContent = p.name; $('by').textContent = `${p.author} · ${p.event}`;
-  $('meta').textContent = `model: ${p.model}`;
+  $('meta').innerHTML = `Model <b>${p.model}</b>`;
   return document.fonts.ready;
 }).then(() => render(0));
 window.render = t => {
-  // Ribbon callback to the intro: streaks burst from the center and sweep out
-  const rk = clamp(t / 1.1);
-  for (const r of ribs) { r.el.style.left = `${lerp(960, r.x * 1920, ease(rk * 1.4)) - r.w / 2}px`; r.el.style.width = `${r.w}px`;
-    r.el.style.opacity = rk < 1 ? Math.sin(rk * Math.PI) : 0; r.el.style.transform = `scaleY(${lerp(0.1, 1, ease(rk * 2))})`; }
-  $('ribs').style.transform = `scale(${lerp(1, 2.4, easeIn(rk))})`;
-  embers($('emb'), t + 7, 80, ease((t - 0.6) / 0.8));
+  $('plate').style.transform = `scale(${lerp(1.0, 1.07, t / 6)})`;
+  const rk = clamp(t / 1.0);
+  for (const r of ribs) { r.el.style.left = `${lerp(960, r.x * 1920, easeS(rk)) - r.w / 2}px`; r.el.style.width = `${r.w}px`;
+    r.el.style.opacity = rk < 1 ? 0.75 * Math.sin(rk * Math.PI) : 0; }
+  $('ribs').style.transform = `scale(${lerp(1, 2.2, easeIn(rk))})`;
   stats.forEach((el, i) => {
-    const k = ease((t - 0.7 - i * 0.25) / 0.9), v = el.querySelector('.v'), target = Number(v.dataset.v);
+    const k = easeS((t - 0.9 - i * 0.2) / 1.4), v = el.querySelector('.v'), target = Number(v.dataset.v);
     v.textContent = isNaN(target) ? v.dataset.v : Math.round(target * k);
-    el.style.opacity = ease((t - 0.7 - i * 0.25) / 0.4);
-    el.style.transform = `translateY(${lerp(40, 0, k)}px)`;
+    el.style.opacity = easeS((t - 0.9 - i * 0.2) / 0.8);
+    el.style.transform = `translateY(${lerp(16, 0, k)}px)`;
   });
-  $('name').style.opacity = ease((t - 2.0) / 0.5);
-  $('name').style.letterSpacing = `${lerp(30, 6, ease((t - 2.0) / 1.2))}px`;
-  $('rule').style.width = `${900 * ease((t - 2.3) / 0.8)}px`;
-  $('by').style.opacity = ease((t - 2.6) / 0.5); $('meta').style.opacity = ease((t - 2.9) / 0.5);
-  $('stage').style.opacity = 1 - clamp((t - 4.9) / 0.6);
+  $('name').style.opacity = easeS((t - 2.0) / 0.9);
+  $('name').style.letterSpacing = `${lerp(24, 14, easeS((t - 2.0) / 2.5))}px`;
+  $('rule').style.width = `${200 * easeS((t - 2.4) / 1.0)}px`;
+  $('by').style.opacity = easeS((t - 2.7) / 0.8); $('meta').style.opacity = easeS((t - 3.0) / 0.8);
+  $('stage').style.opacity = 1 - clamp((t - 5.2) / 0.8);
   grain($('grain'), t);
 };
 </script></body></html>

@@ -3,40 +3,38 @@
 <link rel="stylesheet" href="common.css">
 <style>
   #head { position: absolute; left: 80px; top: 48px; display: flex; align-items: baseline; gap: 28px; }
-  #head h1 { margin: 0; font: 64px Anton; letter-spacing: 3px; text-transform: uppercase; }
+  #head h1 { margin: 0; font: 54px Anton; letter-spacing: 8px; text-transform: uppercase; color: var(--cream); }
   #view { position: absolute; left: 80px; top: 140px; width: 900px; height: 870px; overflow: hidden; border-radius: 14px;
-          background: #111; box-shadow: 0 0 0 2px rgba(255,122,26,.35), 0 30px 80px rgba(0,0,0,.6); }
+          background: #111; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 40px 100px rgba(0,0,0,.7); }
   #cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
   #cam img { display: block; }
-  #box { position: absolute; border: 5px solid var(--orange); border-radius: 6px;
-         box-shadow: 0 0 0 4000px rgba(0,0,0,.45), 0 0 30px var(--orange), inset 0 0 20px rgba(255,122,26,.4); }
+  #box { position: absolute; border: 3px solid var(--orange); border-radius: 4px; box-shadow: 0 0 0 4000px rgba(0,0,0,.55); }
   #json { position: absolute; left: 1040px; top: 150px; width: 800px; height: 870px; border-radius: 14px; overflow: hidden;
-          background: #0c0a09; box-shadow: 0 0 0 2px rgba(255,255,255,.06); padding: 26px 34px; box-sizing: border-box;
+          background: #0b0a09; box-shadow: 0 0 0 1px rgba(255,255,255,.06); padding: 26px 34px; box-sizing: border-box;
           font: 500 24px/1.36 JBMono, monospace; color: #5d564f; }
   .ln { white-space: pre; border-radius: 4px; padding: 0 8px; margin: 0 -8px; }
   .ln.on { color: var(--cream); }
-  .ln.act { background: rgba(255,122,26,.16); color: #fff; box-shadow: inset 5px 0 0 var(--orange); }
+  .ln.act { background: rgba(255,122,26,.08); color: #fff; box-shadow: inset 3px 0 0 var(--orange); }
   .ln.on .k { color: var(--amber); }
   .v { opacity: 0; } .ln.on .v { opacity: 1; }
   .ln.on .num { color: #8fd3ff; } .ln.on .str { color: #b6f09c; } .ln.on .nul { color: #ff8b8b; }
   .sub { font-size: 20px; }
-  #scan { position: absolute; left: 0; right: 0; height: 4px; background: #ffd9a8;
-          box-shadow: 0 0 18px 6px rgba(255,122,26,.8), 0 -60px 80px rgba(255,122,26,.25); }
-  .det { position: absolute; border: 6px solid rgba(143,211,255,.95); background: rgba(143,211,255,.22); border-radius: 6px; box-shadow: 0 0 24px rgba(143,211,255,.8); }
-  #phase { position: absolute; left: 84px; top: 1030px; font: 30px Bebas; letter-spacing: 10px; color: var(--amber); }
+  #scan { position: absolute; left: 0; right: 0; height: 2px; background: rgba(255,240,225,.9);
+          box-shadow: 0 -40px 60px rgba(255,255,255,.06); }
+  .det { position: absolute; border: 5px solid rgba(255,122,26,.85); border-radius: 4px; }
+  #phase { position: absolute; left: 84px; top: 1030px; font: 500 20px JBMono, monospace; letter-spacing: 5px; color: var(--dim); }
   #wire { position: absolute; inset: 0; pointer-events: none; }
-  #tag { position: absolute; right: 80px; top: 64px; font: 30px Bebas; letter-spacing: 8px; color: var(--dim); }
+  #tag { position: absolute; right: 80px; top: 66px; font: 500 20px JBMono, monospace; letter-spacing: 5px; color: var(--dim); }
 </style></head>
 <body><div id="stage">
-  <div class="layer glow"></div>
-  <div id="head"><span class="kicker">LEVEL 1</span><h1>Bill → JSON</h1></div>
+  <div class="layer" style="background: radial-gradient(ellipse at 30% 40%, #14110e, #050505 70%)"></div>
+  <div id="head"><span class="label">Level <b>1</b></span><h1>Bill → JSON</h1></div>
   <div id="tag"></div>
   <div id="view"><div id="cam"><img id="bill"><div id="dets"></div><div id="box"></div></div><div id="scan"></div></div>
   <div id="phase"></div>
   <div id="json"><div id="jin"></div></div>
   <svg id="wire" width="1920" height="1080"><defs><linearGradient id="wg" x1="0" x2="1"><stop offset="0" stop-color="#ff7a1a"/><stop offset="1" stop-color="#ffd29a"/></linearGradient></defs>
-    <path id="wpath" fill="none" stroke="url(#wg)" stroke-width="3" style="filter: drop-shadow(0 0 6px #ff7a1a)"/><circle id="wdot" r="7" fill="#ffd29a"/></svg>
-  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
+    <path id="wpath" fill="none" stroke="#ff7a1a" stroke-width="1.5" stroke-opacity=".9"/><circle id="wdot" r="4" fill="#ff7a1a"/></svg>
   <div class="layer vignette"></div>
   <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
 </div>
@@ -74,7 +72,7 @@ window.assetsReady = Promise.all([loadJSON('data/level1.json'), loadJSON('data/b
 function cam(k) { // camera framing for step k; whole bill when no box
   if (k < 0 || !boxes[steps[k]]) { const s = VH / IH * 0.98; return { s, cx: IW / 2, cy: IH / 2 }; }
   const [x0, y0, x1, y1] = boxes[steps[k]];
-  const s = clamp(Math.min(VW * 0.62 / (x1 - x0), VH * 0.4 / (y1 - y0)), 0.9, 2.6);
+  const s = clamp(Math.min(VW * 0.62 / (x1 - x0), VH * 0.4 / (y1 - y0)), 0.9, 1.8);
   return { s, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
 }
 window.render = t => {
@@ -82,7 +80,7 @@ window.render = t => {
   const end = t > LEAD + steps.length * STEP;
   const cur = end ? -1 : Math.min(k, steps.length - 1);
   const a = cam(end ? steps.length - 1 : k - 1), b = cam(cur);
-  const m = easeIO(end ? (t - LEAD - steps.length * STEP) / 0.8 : f / 0.55);
+  const m = easeS(end ? (t - LEAD - steps.length * STEP) / 1.0 : f / 0.6);
   const s = lerp(a.s, b.s, m), cx = lerp(a.cx, b.cx, m), cy = lerp(a.cy, b.cy, m);
   $('cam').style.transform = `translate(${VW / 2 - cx * s}px, ${VH / 2 - cy * s}px) scale(${s})`;
   const bx = cur >= 0 && boxes[steps[cur]];
@@ -106,9 +104,9 @@ window.render = t => {
   for (const d of $('dets').children) {
     const yStage = VH / 2 + (Number(d.dataset.y) - cx) * 0 + (Number(d.dataset.y) - cy) * s;
     const seen = sk > 0 && beamY > yStage, fadeOut = 1 - clamp((t - 2.3) / 0.4);
-    d.style.opacity = seen ? (0.6 + 0.4 * Math.sin(t * 40 + Number(d.dataset.y))) * fadeOut : 0;
+    d.style.opacity = seen ? easeS((beamY - yStage) / 120) * 0.9 * fadeOut : 0;
   }
-  $('phase').textContent = t < 2.3 ? 'SCANNING BILL…' : end ? '✓ ALL FIELDS EXTRACTED' : `EXTRACTING  ${Math.min(k + 1, steps.length)} / ${steps.length}`;
+  $('phase').textContent = t < 2.3 ? 'Reading bill' : end ? 'All fields extracted' : `Field ${String(Math.min(k + 1, steps.length)).padStart(2, '0')} / ${steps.length}`;
   $('phase').style.opacity = ease((t - 0.3) / 0.3);
   // Wire from the highlighted box to its JSON line
   const wk = ease((f - 0.4) / 0.25);
@@ -125,8 +123,7 @@ window.render = t => {
   // Value pop on the active line
   for (const el of lines) { const v = el.querySelector('.v'); if (!v) continue;
     const live = el.classList.contains('act'); const pk = live ? ease((f - 0.45) / 0.2) : 1;
-    v.style.display = 'inline-block'; v.style.transform = `translateX(${lerp(24, 0, pk)}px)`; v.style.filter = live && pk < 1 ? `blur(${(1 - pk) * 4}px)` : 'none'; }
-  embers($('emb'), t, 40, 0.6);
+    v.style.display = 'inline-block'; v.style.transform = `translateX(${lerp(10, 0, pk)}px)`; v.style.opacity = live ? pk : ''; }
   $('head').style.opacity = ease(t / 0.5);
   $('stage').style.opacity = 1 - clamp((t - window.DUR + 0.4) / 0.4);
   grain($('grain'), t);
