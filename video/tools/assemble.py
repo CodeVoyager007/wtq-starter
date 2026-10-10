@@ -79,6 +79,7 @@ if total > MAX_SEC: sys.exit(f'ERROR: {total:.1f}s is over the 3 minute limit. T
 def pick(prev, nxt):
     # Cinematic grammar: dips to black into chapter cards and the end, soft dissolves elsewhere.
     if nxt in ('chapter', 'outro') or prev == 'intro': return 'fadeblack', 0.5
+    if prev == 'chapter' and nxt == 'clip': return 'circleopen', 0.6
     return 'fade', 0.35
 segs = tl['segments']; trans = []
 for i in range(1, len(parts)):
@@ -106,7 +107,7 @@ json.dump(cues, open(f'{B}/cues.json', 'w'))
 sh('python3', 'tools/music.py', f'{B}/cues.json', f'{B}/music.wav')
 sh('python3', 'tools/intro_audio.py', f'{B}/intro_sfx.wav')
 ff('-i', f'{B}/music.wav', '-i', f'{B}/intro_sfx.wav', '-filter_complex',
-   '[0:a]volume=0.7[m];[1:a]volume=0.9,apad[s];[m][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.8:level=0[a]',
+   '[0:a]volume=0.45[m];[1:a]volume=0.9,apad[s];[m][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.8:level=0[a]',
    '-map', '[a]', f'{B}/mix.wav')
 
 # Two-pass encode to a size target so the ZIP stays under 15 MB

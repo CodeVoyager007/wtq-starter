@@ -30,6 +30,7 @@
   #sub { font: 500 24px JBMono, monospace; letter-spacing: 12px; text-transform: uppercase; color: #b9ada0; margin-top: 30px; padding-left: 12px; }
   #rule { height: 2px; width: 0; background: var(--orange); margin-top: 22px; }
   #flash { background: #fff; }
+  #icap { font: 300 34px/1.5 'Inter Display', Inter, sans-serif; color: #e6dccf; text-align: center; margin-top: 56px; opacity: 0; }
   #vignette { background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.85) 100%); }
   .bar { position: absolute; left: 0; right: 0; height: 120px; background: #000; z-index: 50; }
   #grain { mix-blend-mode: overlay; opacity: .12; }
@@ -45,6 +46,7 @@
     <div id="title">Bill Decoder<span id="titleSolid">Bill Decoder</span></div>
     <div id="rule"></div>
     <div id="sub">Read it. Extract it. Explain it.</div>
+    <div id="icap">Bill Decoder: reads K-Electric, LESCO and IESCO bills and explains them in plain English.<br>Model: Gemini 3.5 Flash-Lite.</div>
   </div>
   <div id="flash" class="layer"></div>
   <div id="vignette" class="layer"></div>
@@ -54,7 +56,7 @@
 </div>
 <script>
 // Deterministic timeline: window.render(t) draws the frame at time t (seconds).
-const DUR = 7.5;
+const DUR = 10.5;
 const C = '../assets/panels/';
 const crops = ['logo_raw','units_red','calc_orange','amount_due_raw','usage_red','due_date_amber','prev_dues_red','star_raw',
                'history_orange','customer_info_red','header_used_raw','units_amber','calc_red','amount_due_orange','usage_raw',
@@ -89,7 +91,7 @@ $('title').style.backgroundImage = `url(${C}title_tex.jpg)`;
 
 function render(t) {
   // Letterbox
-  const lb = t < 6.6 ? 1 : 1 - ease((t - 6.6) / 0.6);
+  const lb = t < 9.6 ? 1 : 1 - ease((t - 9.6) / 0.6);
   $('barTop').style.transform = `translateY(${-120 * (1 - lb)}px)`;
   $('barBot').style.transform = `translateY(${120 * (1 - lb)}px)`;
 
@@ -141,7 +143,8 @@ function render(t) {
     $('sub').style.opacity = ease((t - T0 - 0.6) / 0.5);
     $('sub').style.letterSpacing = `${lerp(20, 12, ease((t - T0 - 0.6) / 1.6))}px`;
   } else { $('title').style.opacity = 0; $('rule').style.width = 0; $('sub').style.opacity = 0; }
-  $('titleWrap').style.opacity = t < 6.9 ? 1 : 1 - clamp((t - 6.9) / 0.6);
+  $('titleWrap').style.opacity = t < 9.9 ? 1 : 1 - clamp((t - 9.9) / 0.6);
+  $('icap').style.opacity = clamp((t - 6.2) / 0.8);
 
   // White flash on slam
   $('flash').style.opacity = t >= T0 && t < T0 + 0.25 ? 0.85 * (1 - (t - T0) / 0.25) : 0;

@@ -13,7 +13,7 @@
       "type": "clip",
       "file": "raw/01_launch.mp4",
       "num": "01",
-      "cap": "Start the backend and the frontend",
+      "cap": "Run from the terminal: backend + web app",
       "crop": [
         408,
         226,
@@ -30,7 +30,7 @@
       "type": "clip",
       "file": "raw/02_extract.mp4",
       "num": "02",
-      "cap": "Upload IESCO_0005, pick the provider, decode",
+      "cap": "Bill in → every field extracted and checked against the bill's own sums",
       "title": "localhost:3000 — Bill Decoder",
       "ranges": [
         [
@@ -47,7 +47,7 @@
       "type": "clip",
       "file": "raw/03_ask.mp4",
       "num": "02",
-      "cap": "Level 1 · notices in English and the extracted JSON",
+      "cap": "Bill in → every field extracted and checked against the bill's own sums",
       "title": "localhost:3000 — Bill Decoder",
       "ranges": [
         [
@@ -68,7 +68,7 @@
       "type": "clip",
       "file": "raw/03_ask.mp4",
       "num": "03",
-      "cap": "Level 2 · ask a question about the same bill",
+      "cap": "Ask anything: numbers computed in code, grounded in the bill",
       "title": "localhost:3000 — Bill Decoder",
       "ranges": [
         [
@@ -81,7 +81,7 @@
       "type": "clip",
       "file": "raw/03b_answer.mp4",
       "num": "03",
-      "cap": "The answer, grounded in the bill",
+      "cap": "Ask anything: numbers computed in code, grounded in the bill",
       "title": "localhost:3000 — Bill Decoder",
       "hold": 5
     },
@@ -97,7 +97,7 @@
       "type": "clip",
       "file": "raw/04_run.mp4",
       "num": "04",
-      "cap": "Run the solution on the test bills folder",
+      "cap": "10 test bills → level1.csv + level2.csv",
       "crop": [
         418,
         350,
@@ -110,7 +110,7 @@
       "type": "clip",
       "file": "raw/04_check.mp4",
       "num": "04",
-      "cap": "Check the generated level1.csv and level2.csv",
+      "cap": "10 test bills → level1.csv + level2.csv",
       "crop": [
         418,
         540,
