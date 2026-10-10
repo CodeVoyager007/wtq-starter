@@ -15,6 +15,7 @@ SKIP_DIRS = {".git", ".venv", "node_modules", ".next", "__pycache__", ".pytest_c
 SKIP_FILES = {".env", ".DS_Store"}
 SKIP_SUFFIXES = {".zip", ".pyc"}
 BILL_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+BINARY_SUFFIXES = BILL_IMAGE_SUFFIXES | {".ico", ".gif", ".mp4", ".mov", ".webm", ".exe", ".dll", ".so", ".whl"}
 SECRET_PATTERNS = [
     re.compile(p) for p in (r"AIza[0-9A-Za-z_\-]{30,}", r"sk-[A-Za-z0-9_\-]{20,}", r"sk-ant-[A-Za-z0-9_\-]{20,}")
 ]
@@ -66,6 +67,12 @@ def _source_files(repo_root: Path, include_cache: bool):
         parts = set(rel.parts)
         if path.is_dir() or parts & SKIP_DIRS or path.name in SKIP_FILES or path.suffix in SKIP_SUFFIXES:
             continue
+        if path.name.startswith(".env") and path.name != ".env.example":
+            continue  # .env, .env.local, ... hold real settings or keys
+        if any(part.startswith("output") for part in rel.parts[:-1]):
+            continue  # run results go in output/ of the ZIP, not in source/
+        if path.suffix.lower() in BINARY_SUFFIXES:
+            continue  # source only: no images, videos or other binaries
         if ".cache" in parts and not include_cache:
             continue
         if "data" in parts and path.suffix.lower() in BILL_IMAGE_SUFFIXES:

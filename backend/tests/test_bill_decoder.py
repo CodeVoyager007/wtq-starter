@@ -297,6 +297,12 @@ def test_zip_layout_and_secret_guard(tmp_path):
     (repo / "backend").mkdir(parents=True)
     (repo / "README.md").write_text("# readme")
     (repo / "backend" / ".env").write_text("API_KEY=real")
+    (repo / "frontend").mkdir()
+    (repo / "frontend" / ".env.local").write_text("NEXT_PUBLIC_API_URL=x")
+    (repo / "frontend" / "hero.jpg").write_bytes(b"\xff\xd8")
+    (repo / ".env.example").write_text("API_KEY=your-api-key-here")
+    (repo / "backend" / "output_stress").mkdir()
+    (repo / "backend" / "output_stress" / "level1.csv").write_text("x")
     out.mkdir()
     for name in ("level1.csv", "level2.csv"):
         (out / name).write_text("bill_id\n")
@@ -304,7 +310,9 @@ def test_zip_layout_and_secret_guard(tmp_path):
     package.build_zip(repo, out, zip_path, include_cache=False, demo=None)
     names = set(zipfile.ZipFile(zip_path).namelist())
     assert {"output/level1.csv", "output/level2.csv", "source/README.md"} <= names
-    assert "source/backend/.env" not in names
+    assert "source/backend/.env" not in names and "source/frontend/.env.local" not in names
+    assert "source/.env.example" in names
+    assert "source/frontend/hero.jpg" not in names and "source/backend/output_stress/level1.csv" not in names
 
     (repo / "leak.py").write_text('KEY = "AIza' + "x" * 35 + '"')
     with pytest.raises(RuntimeError, match="API keys"):
