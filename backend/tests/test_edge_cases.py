@@ -141,3 +141,10 @@ def test_api_file_names_cannot_escape(web):
     image = (DATA / "bills" / "KESC_0008.png").read_bytes()
     res = _upload(web, image, name="../../etc/KESC_0008.png")
     assert res.status_code == 200 and res.json()["bill_id"] == "KESC_0008"
+
+
+def test_check_fails_when_templates_are_missing(tmp_path):
+    out = tmp_path / "out"
+    csv_io.make_templates(["KESC_1"], [("Q1", "q")], out)
+    problems = package.check_outputs(out, tmp_path / "no-such-folder")
+    assert len(problems) == 2 and all("template not found" in p for p in problems)

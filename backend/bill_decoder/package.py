@@ -28,8 +28,11 @@ def check_outputs(out_dir: Path, template_dir: Path) -> list[str]:
         if not out_path.exists():
             problems.append(f"{name}: missing in {out_dir}")
             continue
+        if not tpl_path.exists():
+            problems.append(f"{name}: template not found at {tpl_path}")
+            continue
         out_cols, out_rows = csv_io.read(out_path)
-        tpl_cols, tpl_rows = csv_io.read(tpl_path) if tpl_path.exists() else (out_cols, out_rows)
+        tpl_cols, tpl_rows = csv_io.read(tpl_path)
         if out_cols != tpl_cols:
             problems.append(f"{name}: columns {out_cols} differ from template {tpl_cols}")
         if len(out_rows) != len(tpl_rows):
