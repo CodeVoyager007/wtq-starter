@@ -1,0 +1,9 @@
+Photos loaded from Unsplash (free license, credit is appreciated, not required):
+hero          Marcos Paulo Prado  https://unsplash.com/photos/588l4wraJQo
+header-how    Arkan Izz Zaydan Maulana  https://unsplash.com/photos/yoNfsUq9j6k
+header-wksp   Irvin Aloise  https://unsplash.com/photos/kfZ3v_AItWQ
+step-1        Sarah Lee  https://unsplash.com/photos/QURU8IY-RaI
+step-2        Lionello DelPiccolo  https://unsplash.com/photos/qEswHvOmi1c
+step-3        boris misevic  https://unsplash.com/photos/TS9g3YhTpKE
+empty         Elliot Cullen  https://unsplash.com/photos/0ioxPTxZdwE
+The other .jpg files in this folder are generated fallbacks, used only if the photo cannot load.
