@@ -77,6 +77,32 @@ function summary(b: Level1): { title: string; rows: Row[] }[] {
   ];
 }
 
+/** Pretty JSON with the video's data colours: keys amber, numbers blue, text green, nulls red. */
+function JsonView({ value }: { value: unknown }) {
+  const json = JSON.stringify(value, null, 2);
+  const parts = json.split(/("(?:[^"\\]|\\.)*"(?=\s*:)|"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?|null)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (i % 2 === 0) return part;
+        const isKey = parts[i + 1]?.trimStart().startsWith(":");
+        const cls = isKey
+          ? "json-key"
+          : part === "null"
+            ? "json-null"
+            : part.startsWith('"')
+              ? "json-string"
+              : "json-number";
+        return (
+          <span key={i} className={cls}>
+            {part}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 function Lines({ title, lines, total }: { title: string; lines: BillLine[]; total: number | null }) {
   return (
     <div>
@@ -92,12 +118,12 @@ function Lines({ title, lines, total }: { title: string; lines: BillLine[]; tota
           {lines.map((l, i) => (
             <tr key={i} className="border-b border-line">
               <td className="py-1">{label(l.type)}</td>
-              <td className="py-1 text-right tabular-nums">{pkr(l.amount)}</td>
+              <td className="data py-1 text-right text-number">{pkr(l.amount)}</td>
             </tr>
           ))}
           <tr className="font-bold">
             <td className="py-1">Total</td>
-            <td className="py-1 text-right tabular-nums">{pkr(total)}</td>
+            <td className="data py-1 text-right text-number">{pkr(total)}</td>
           </tr>
         </tbody>
       </table>
@@ -227,8 +253,8 @@ export default function BillDecoder() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-xl font-bold text-teal-dark">2. Bill details</h2>
                   {bill.checks.issues.length === 0 ? (
-                    <span className="rounded-full bg-sky px-3 py-1 text-sm font-bold text-teal-dark">
-                      ✓ All checks passed{bill.checks.repaired ? " (after a re-read)" : ""}
+                    <span className="label rounded-full border border-ok px-3 py-1 text-sm text-ok">
+                      ✓ Grounded in the bill · all checks passed{bill.checks.repaired ? " after a re-read" : ""}
                     </span>
                   ) : (
                     <span className="rounded-full bg-sky px-3 py-1 text-sm font-bold text-danger">
@@ -246,7 +272,7 @@ export default function BillDecoder() {
                           {group.rows.map(([k, v]) => (
                             <tr key={k} className="border-b border-line">
                               <td className="py-1 text-muted">{k}</td>
-                              <td className={`py-1 text-right tabular-nums ${v === "not shown" ? "text-muted" : ""}`}>{v}</td>
+                              <td className={`data py-1 text-right ${v === "not shown" ? "text-danger" : "text-number"}`}>{v}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -280,8 +306,8 @@ export default function BillDecoder() {
                   {showJson ? "Hide" : "Show"} Level 1 JSON
                 </button>
                 {showJson && (
-                  <pre className="data mt-3 max-h-96 overflow-auto rounded-lg bg-sky p-3 text-xs">
-                    {JSON.stringify(bill.level1, null, 2)}
+                  <pre className="data mt-3 max-h-96 overflow-auto rounded-lg bg-mist p-3 text-xs">
+                    <JsonView value={bill.level1} />
                   </pre>
                 )}
               </div>

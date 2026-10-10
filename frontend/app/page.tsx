@@ -34,9 +34,6 @@ export default function Home() {
         <ol className="mt-8 grid gap-5 sm:grid-cols-3">
           {siteConfig.steps.map((s, i) => (
             <li key={s.title} className="card overflow-hidden">
-              {images.steps[i] && (
-                <Photo pic={images.steps[i]} className="h-40 w-full object-cover" />
-              )}
               <div className="p-6">
                 <span className="script text-5xl text-teal">{i + 1}</span>
                 <h3 className="mt-1 text-xl font-bold text-teal-dark">{s.title}</h3>

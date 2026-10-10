@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import "@fontsource/dancing-script/600.css";
-import "@fontsource/dancing-script/700.css";
-import "@fontsource/tinos/400.css";
-import "@fontsource/tinos/400-italic.css";
-import "@fontsource/tinos/700.css";
+import "@fontsource/anton";
+import "@fontsource/bebas-neue";
 import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";

@@ -1,47 +1,38 @@
 @import "tailwindcss";
 
-/* ---------- THEME: "Deep ocean". Change the whole look from this one block ----------
-   The page is dark navy. Anything with the .card class switches to light colors
-   (the same token names get light values inside .card), so text stays readable. */
+/* ---------- THEME: "Ember on black". Change the whole look from this one block ----------
+   Near-black cinema base with one warm accent family taken from the K-Electric bill's orange.
+   Token names are kept from the starter so components need no changes:
+   teal = primary accent, teal-dark = warm highlight, sky = raised surface. */
 @theme {
-  --color-mist: #06192a; /* page background (deep navy) */
-  --color-card: #ffffff;
-  --color-teal: #5eead4; /* aqua: headings, links, accents on the dark page */
-  --color-teal-dark: #a7f3e8;
-  --color-sage: #2a7f8f; /* borders and accents */
-  --color-sky: #12394d; /* soft highlight */
-  --color-ink: #e6f4f6; /* text */
-  --color-muted: #9cc0c9;
-  --color-line: #1c4a60;
-  --color-danger: #ff9b94;
+  --color-mist: #050505; /* base: ink black */
+  --color-card: #0f0d0b; /* raised panels */
+  --color-teal: #ff7a1a; /* ember orange: titles, accents, rules */
+  --color-teal-dark: #ffb340; /* amber: sub-headings, highlights */
+  --color-sage: #e8401c; /* deep ember red: hot accent, borders that need weight */
+  --color-sky: #1c1612; /* soft highlight surface */
+  --color-ink: #f4e9dc; /* cream text */
+  --color-muted: #8a7f74; /* warm grey */
+  --color-line: #2b231d;
+  --color-danger: #ff8b8b;
+  --color-ok: #7ad87a;
+  --color-number: #8fd3ff; /* data panels only: numbers */
+  --color-string: #b6f09c; /* data panels only: text values */
 
-  /* Fonts: cursive for big titles, Times for text, small clean sans for tables and numbers */
-  --font-script: "Dancing Script", "Brush Script MT", cursive;
-  --font-serif: "Times New Roman", Tinos, Times, serif;
-  --font-sans: "Inter Variable", Inter, system-ui, sans-serif;
+  /* Fonts: Anton for big titles, Bebas Neue for labels, Inter for reading, JetBrains Mono for data */
+  --font-script: "Anton", Impact, sans-serif;
+  --font-label: "Bebas Neue", "Anton", sans-serif;
+  --font-serif: "Inter Variable", Inter, system-ui, sans-serif;
+  --font-sans: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* Button colors per context (dark page vs light card) */
 :root {
-  --btn-bg: #2dd4bf;
-  --btn-bg-hover: #5eead4;
-  --btn-fg: #04202b;
+  --btn-bg: #ff7a1a;
+  --btn-bg-hover: #ffb340;
+  --btn-fg: #050505;
 }
 
-/* Light context: cards reuse the same names with light values */
 .card {
-  --color-teal: #0e6a73;
-  --color-teal-dark: #0a4e57;
-  --color-sage: #5fb0b4;
-  --color-sky: #e1f1f4;
-  --color-mist: #f1f8f9;
-  --color-ink: #0d2b3a;
-  --color-muted: #4a6571;
-  --color-line: #d3e4e8;
-  --color-danger: #a4322c;
-  --btn-bg: #0e6a73;
-  --btn-bg-hover: #0a4e57;
-  --btn-fg: #ffffff;
   color: var(--color-ink);
 }
 
@@ -53,13 +44,13 @@ body {
   background: var(--color-mist);
   color: var(--color-ink);
   font-family: var(--font-serif);
-  font-size: 18px; /* Times looks small, so the base size is a bit bigger */
+  font-size: 17px;
   line-height: 1.6;
 }
 
 ::selection {
   background: var(--color-teal);
-  color: #04202b;
+  color: #050505;
 }
 
 :focus-visible {
@@ -71,8 +62,9 @@ body {
 .card {
   background: var(--color-card);
   border: 1px solid var(--color-line);
-  border-radius: 18px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15), 0 14px 34px -14px rgb(0 0 0 / 0.55);
+  border-top: 2px solid var(--color-teal);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgb(255 122 26 / 0.04), 0 18px 40px -18px rgb(255 122 26 / 0.25);
 }
 
 .btn {
@@ -111,7 +103,7 @@ body {
 
 .field {
   width: 100%;
-  background: #fff;
+  background: #050505;
   border: 1.5px solid var(--color-line);
   border-radius: 12px;
   padding: 0.6rem 0.85rem;
@@ -123,28 +115,46 @@ body {
 }
 
 /* Photo areas (page headers, hero). The dark overlay keeps text readable on any photo */
+/* Page headers: an ember glow on black instead of photos */
 .photo-bg {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: #06192a;
+  background: radial-gradient(ellipse 70% 90% at 15% 0%, rgb(255 122 26 / 0.28), transparent 60%),
+    radial-gradient(ellipse 50% 70% at 90% 10%, rgb(232 64 28 / 0.22), transparent 65%), #050505;
+  border-bottom: 1px solid var(--color-line);
 }
-.photo-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(to bottom, rgb(6 25 42 / 0.55), rgb(6 25 42 / 0.35) 45%, #06192a);
+.photo-bg > img {
+  display: none;
 }
 
 .script {
   font-family: var(--font-script);
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ff7a1a 30%, #e8401c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+h2,
+h3,
+h4,
+.label {
+  font-family: var(--font-label);
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 
 .data {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
-  line-height: 1.45;
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
+.json-key { color: var(--color-teal-dark); }
+.json-number { color: var(--color-number); }
+.json-string { color: var(--color-string); }
+.json-null { color: var(--color-danger); }
