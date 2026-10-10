@@ -138,6 +138,14 @@ def test_cross_check_flags_values_the_transcript_never_saw():
     assert len(issues) == 1 and "total_taxes = 596.62" in issues[0]
 
 
+def test_cross_check_covers_dates_month_and_tariff():
+    misread = dict(TRUTH_0008, due_date="2026-04-27", bill_month="2026-03", tariff="A1-B")
+    issues = validate.cross_check(misread, TRANSCRIPT_0008)
+    assert len(issues) == 1
+    for text in ("due_date = 2026-04-27", "bill_month = 2026-03", "tariff = A1-B"):
+        assert text in issues[0]
+
+
 def test_cross_check_is_skipped_when_transcription_failed():
     assert validate.cross_check(dict(TRUTH_0008, total_taxes=1), None) == []
 
@@ -172,7 +180,9 @@ TRANSCRIPT_0008 = {
         ("MUCT (KMC)", "20.00"), ("Taxes and Duties", "569.62"), ("Current month", "3,430.24"),
         ("Previous Dues", "-0.53"), ("Amount Payable within Due Date", "3,430"),
         ("with 5% LPS", "3,574"), ("with 10% LPS", "3,716"), ("Sanc Load", "3"),
-        ("Previous Reading", "8819"), ("Current Reading", "8970"), ("Units", "151")]]}],
+        ("Previous Reading", "8819"), ("Current Reading", "8970"), ("Units", "151"),
+        ("Bill Month", "Apr-26"), ("Issue Date", "07-Apr-2026"), ("Due Date", "21st Apr 2026"),
+        ("Reading Date", "03-Apr-26 | No.of Month(s): 1"), ("Tariff", "A1-R")]]}],
     "tables": [], "messages_in_english": ["FCA of XWDISCOs is also charged to KE consumers."],
 }
 

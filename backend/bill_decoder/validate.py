@@ -4,8 +4,14 @@ from __future__ import annotations
 
 import re
 
+from .normalize import parse_date, parse_month
+
 TOLERANCE = 1.0
 _NUMBER = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
+_DATE_LIKE = re.compile(
+    r"\d{1,2}(?:st|nd|rd|th)?[\s\-/.]*(?:[A-Za-z]{3,9}|\d{1,2})[\s\-/.,]*\d{2,4}"
+    r"|[A-Za-z]{3,9}[\s\-/.]*\d{2,4}|\d{4}-\d{2}(?:-\d{2})?"
+)
 _MIN_TRANSCRIPT_NUMBERS = 20  # below this the transcription itself probably failed
 
 
@@ -94,11 +100,29 @@ def transcript_numbers(transcript: dict | None) -> set[float]:
     return numbers
 
 
+def transcript_dates(transcript: dict | None) -> tuple[set[str], set[str]]:
+    """All dates (YYYY-MM-DD) and months (YYYY-MM) printed anywhere in the transcript."""
+    dates, months = set(), set()
+    for text in _strings(transcript or {}):
+        for token in _DATE_LIKE.findall(text):
+            if day := parse_date(token):
+                dates.add(day)
+                months.add(day[:7])
+            elif month := parse_month(token):
+                months.add(month)
+    return dates, months
+
+
+def _compact(text: str) -> str:
+    return re.sub(r"[^a-z0-9()]", "", text.lower())
+
+
 def cross_check(bill: dict, transcript: dict | None) -> list[str]:
-    """Flag extracted amounts that the independent full transcription never saw."""
+    """Flag extracted values (numbers, dates, tariff) that the independent transcription never saw."""
     printed = transcript_numbers(transcript)
     if len(printed) < _MIN_TRANSCRIPT_NUMBERS:
         return []
+    issues = _cross_check_text(bill, transcript)
     values = [(name, bill.get(name)) for name in (
         "sanctioned_load_kw", "previous_reading", "current_reading", "units_consumed", "total_charges",
         "total_taxes", "current_bill", "arrears", "payable_within_due_date", "payable_after_due_date")]
@@ -108,7 +132,22 @@ def cross_check(bill: dict, transcript: dict | None) -> list[str]:
         f"{name} = {value}" for name, value in values
         if value not in (None, 0) and not any(abs(abs(value) - p) <= 0.011 for p in printed)
     ]
-    if not missing:
+    if missing:
+        issues.append(f"These extracted amounts do not appear anywhere in an independent transcription "
+                      f"of the bill, so they may be misread: {', '.join(missing)}.")
+    return issues
+
+
+def _cross_check_text(bill: dict, transcript: dict) -> list[str]:
+    dates, months = transcript_dates(transcript)
+    unseen = [f"{name} = {bill[name]}" for name in ("reading_date", "issue_date", "due_date")
+              if bill.get(name) and dates and bill[name] not in dates]
+    if bill.get("bill_month") and months and bill["bill_month"] not in months:
+        unseen.append(f"bill_month = {bill['bill_month']}")
+    tariff = bill.get("tariff")
+    if tariff and _compact(tariff) not in _compact(" ".join(_strings(transcript))):
+        unseen.append(f"tariff = {tariff}")
+    if not unseen:
         return []
-    return [f"These extracted values do not appear anywhere in an independent transcription of the bill, "
-            f"so they may be misread: {', '.join(missing)}."]
+    return [f"These extracted text values do not match anything in an independent transcription "
+            f"of the bill, so they may be misread: {', '.join(unseen)}."]
