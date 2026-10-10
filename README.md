@@ -1,123 +1,161 @@
-# Project Name
+# Utility Bill Decoder
 
-> One clear sentence: what it does and who it helps.
+Reads a photo or scan of a K-Electric, LESCO or IESCO electricity bill, extracts its billing
+details as JSON (Level 1) and answers customer questions about it in plain English (Level 2).
 
-Built at **Women Tech Quest 2026** (Build with AI stream) by Ayesha Mughal.
+Built at **Women Tech Quest 2026** (Build with AI track) by Ayesha Mughal.
 
-**Live demo:** _paste Vercel link_  ·  **Video / screenshots:** _add after the demo_
+## Quick start (Windows PowerShell)
 
-## The problem
+Requirements: **Python 3.11** (managed by [uv](https://docs.astral.sh/uv/)) and a Gemini API key from
+[Google AI Studio](https://aistudio.google.com).
 
-_Two or three simple sentences. Who has this problem? Why does it matter?_
+```powershell
+# 1. Install uv once (skip if `uv --version` works)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-## What we built
+# 2. Configure the model and key
+copy .env.example backend\.env      # then open backend\.env and set API_KEY
 
-_Three bullets. What can a user do in the app?_
+# 3. Install dependencies (exact versions from uv.lock)
+cd backend
+uv sync
 
-- _Upload data or paste text_
-- _Ask a question / run the analysis_
-- _Get an answer with a table, a chart and proof (code or sources)_
+# 4. Run on a folder of bills and the two CSV templates
+uv run python -m bill_decoder run --bills <bills-folder> --csv <csv-folder> --out output
+```
+
+`<bills-folder>` holds the bill images (`KESC_0002.png`, `LESCO_0008.jpg`, ...).
+`<csv-folder>` holds the templates `level1.csv` and `level2.csv`.
+The completed files are written to `backend/output/level1.csv` and `backend/output/level2.csv`,
+with a per-bill log of checks in `backend/output/run_report.json`.
+
+On macOS/Linux the commands are the same, with `cp .env.example backend/.env`.
+Without uv: `pip install -r backend/requirements.txt`, then run the same command with `python`
+instead of `uv run python`, from the `backend` folder.
+
+### Other commands
+
+```powershell
+# Score level1.csv against reference JSON files (text exact, numbers within ±1)
+uv run python -m bill_decoder eval --pred output/level1.csv --truth data/train/truth
+
+# Check the outputs against the templates (headers, row order, no empty cells, valid JSON)
+uv run python -m bill_decoder check --out output --csv <csv-folder>
+
+# Check, then build the submission ZIP (refuses if anything looks like an API key)
+uv run python -m bill_decoder package --out output --csv <csv-folder> --zip submission.zip --include-cache
+
+# Unit tests (no API key needed)
+uv run pytest -q
+```
+
+Training example: `uv run python -m bill_decoder run --bills data/train/bills --csv data/train/csv --out output`
+(the training templates were built with the `templates` command from `data/train/questions.txt`).
 
 ## How it works
 
 ```
-Browser (Next.js)  ->  FastAPI backend  ->  Gemini + pandas / scikit-learn  ->  answer
+bill image ─┬─> extraction call ──> normalize (code) ──┐
+            │                                           ├─> checks (code) ──> repair call if any fail ──> level1.csv
+            └─> full transcription call ───────────────┘                                                    │
+                                                                                                             v
+                     questions + checked facts + transcript + image ──> answer call ──> calculations (code) ──> level2.csv
 ```
 
-1. The user adds a file or text in the **Workspace** page.
-2. The backend looks at the data first (columns, types, missing values).
-3. Gemini reasons over a short summary, the backend runs the steps and checks the result.
-4. The UI shows the answer, a table or chart, and the code or sources that were used.
+1. **Provider from the file name.** `KESC_*` → `KE`, `LESCO_*`, `IESCO_*`. Deterministic, never asked of the model.
+2. **Extraction** (1 model call per bill). The prompt carries the guide's rules plus a layout guide for that
+   provider (where each value sits on a KE, LESCO or IESCO bill). The model copies values as printed strings.
+3. **Normalization in code**: `Rs. 19,964` → `19964`, `54770CR` → `-54770`, `21st Apr 2026` → `2026-04-21`,
+   types mapped to the allowed lists, blank and zero lines dropped, subsidies negative, the highest
+   late-payment amount, combined tax figure → `taxes: []` + `total_taxes`, every field present (null if unreadable).
+4. **Full transcription** (1 call): an independent second reading of everything printed (all sections,
+   tables, chart bars, notices translated from Urdu), with personal identifiers hidden.
+5. **Checks in code**: readings vs units, charge lines vs `total_charges`, tax lines vs `total_taxes`,
+   charges + taxes vs `current_bill`, late amount ≥ on-time amount, date order, and a **cross-check**
+   that every extracted amount, date, month and tariff also appears in the independent transcription.
+6. **Repair** (at most 1 call): if a check fails, the model re-reads the bill with the failed checks and the
+   transcript as evidence. The reading with fewer failed checks is kept.
+7. **Level 2** (1 call per bill for all questions): the model gets the checked facts, the transcript and the
+   image. It writes the reasoning and **calculation expressions**; a safe evaluator in Python
+   (`calc.py`, no `eval`) computes every number. A failed calculation is retried once with the error, then
+   answered directly; no answer cell is ever left empty.
 
-Built-in modes (each is one small file in `backend/app/modules/`):
+### Reliability and reproducibility
 
-| Mode | What it does | File |
+- **Same answers on a rerun**: temperature 0, fixed seed, `top_k=1`, and every model response is cached in
+  `backend/.cache/` keyed by a hash of model, prompt, image and schema. A rerun reuses the cache and gives
+  identical CSVs. Delete `backend/.cache` to force fresh model calls.
+- **Rate limits**: client-side limiter (`REQUESTS_PER_MINUTE`), exponential backoff, and automatic switch to
+  `API_KEY_BACKUP` on HTTP 429.
+- **Failure handling**: a bill whose image is missing or whose calls all fail still gets a valid row
+  (all fields `null`), and the failure is listed in `run_report.json` and at the end of the run.
+- **Model guard**: the code refuses to start unless `MODEL_NAME` is one of the competition's allowed models.
+
+### Calls and cost
+
+Per bill: extraction + transcription + (repair, only if a check fails) + 1 answer call.
+For 10 test bills that is about 30 to 40 calls, inside the Gemini free tier (15 requests/min, 500/day).
+
+## Configuration
+
+All settings are environment variables in `backend/.env` (template: `.env.example`).
+
+| Variable | Meaning | Value used |
 |---|---|---|
-| Analyze data | Plain English question -> pandas code -> answer | `csv_analyst.py` |
-| Ask documents | Search text/PDF files and answer with sources (RAG) | `rag.py` |
-| Extract / Classify | Messy text -> structured fields or labels | `extraction.py` |
-| Predict | Quick scikit-learn baseline with honest metrics | `ml_stub.py` |
-| Custom | Your own logic for the challenge | `custom.py` -> `solve_challenge()` |
-
-## Tech stack
-
-Next.js 16, Tailwind CSS 4, FastAPI, Python 3.11, pandas, scikit-learn, Google Gemini (`google-genai`).
-
-## Run it on your laptop (Windows PowerShell)
-
-Install once: [Node.js 20+](https://nodejs.org) and uv (`powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`).
-
-**Terminal 1: backend**
-
-```powershell
-cd backend
-uv sync
-copy .env.example .env      # then open .env and paste your GEMINI_API_KEY
-uv run uvicorn app.main:app --reload --port 8000
-```
-
-**Terminal 2: frontend**
-
-```powershell
-cd frontend
-npm install
-copy .env.example .env.local
-npm run dev
-```
-
-Open http://localhost:3000, go to **Workspace**, and click **Load sample data**.
-
-No key yet? Set `LLM_MOCK=1` in `backend/.env` and the whole app runs with fake AI answers. Good for testing the screens.
-
-**Check everything works (before the event):**
-
-```powershell
-cd backend
-uv run pytest -q
-```
-
-## Environment variables
-
-| Where | Name | Meaning |
-|---|---|---|
-| backend/.env | `GEMINI_API_KEY` | Your main Gemini key |
-| backend/.env | `GEMINI_API_KEY_BACKUP` | Second key, used automatically if the first hits a limit |
-| backend/.env | `GEMINI_MODEL` | Model name (default `gemini-2.5-flash`). Check it still exists in Google AI Studio |
-| backend/.env | `FALLBACK_*` | Optional Groq/OpenRouter backup (see `.env.example`) |
-| backend/.env | `FRONTEND_ORIGINS` | Allowed frontend URLs (`*.vercel.app` is already allowed) |
-| frontend/.env.local | `NEXT_PUBLIC_API_URL` | Backend URL (`http://localhost:8000` locally) |
-
-Never commit `.env` files. They are in `.gitignore`.
-
-## Deploy (only if you have 30+ minutes left)
-
-**Backend on Render:** New > Blueprint > pick this repo (it reads `render.yaml`). Add `GEMINI_API_KEY` and `GEMINI_API_KEY_BACKUP` in the dashboard. Free plans sleep, so open `<your-backend>/health` about 5 minutes before you demo.
-
-**Frontend on Vercel:** Import the repo, set **Root Directory** to `frontend`, add `NEXT_PUBLIC_API_URL` = your Render URL, deploy.
-
-If you add a Python package, refresh the deploy list: `cd backend; uv export --no-hashes --no-dev --no-emit-project > requirements.txt`.
+| `MODEL_PROVIDER` | Model provider | `google` |
+| `MODEL_NAME` | Model ID | `gemini-3.5-flash-lite` |
+| `API_KEY` | Gemini API key | placeholder in `.env.example` |
+| `API_KEY_BACKUP` | Optional second key (different Google account) | empty |
+| `REQUESTS_PER_MINUTE` | Client-side rate limit | `12` |
+| `CACHE_DIR` | Cache folder, relative to `backend/` | `.cache` |
+| `LLM_MOCK` | `1` = no model calls (tests only) | unset |
 
 ## Project structure
 
 ```
 backend/
-  app/main.py            API routes (upload, run, chat, sample)
-  app/custom.py          EVENT DAY: the one file to edit for the challenge
-  app/llm.py             Gemini calls, retries, backup key, fallback provider
-  app/modules/           the 4 AI patterns + data profiler
-  sample_data/           demo table + demo FAQ document
-  scripts/profile_data.py   profile any file from the terminal
-  tests/test_smoke.py    proves all modes work
-frontend/
-  lib/config.ts          EVENT DAY: names, text, steps (edit this first)
-  app/globals.css        theme colors and fonts (one block)
-  app/                   Home, Workspace (/app), How it works
-  components/            Workspace, ResultView, ChatBox, charts, tables
+  bill_decoder/          the solution (command line: python -m bill_decoder)
+    __main__.py          commands: run, eval, check, package, templates
+    pipeline.py          batch run: templates in, completed CSVs out
+    extract.py           Level 1 flow: extract, transcribe, check, repair
+    answer.py            Level 2 flow: answers with code-computed numbers
+    prompts.py           all prompt text, including the per-provider layout guides
+    normalize.py         numbers, dates, types, provider (no model calls)
+    validate.py          consistency checks and transcript cross-check
+    calc.py              safe arithmetic evaluator for answers
+    llm.py               the only module that calls the model: guard, limiter, retries, cache
+    imaging.py           image loading (EXIF rotation, size cap)
+    schema.py            Level 1 field list and the JSON schemas sent to the model
+    csv_io.py, package.py, evaluate.py, config.py
+  data/train/            training bills, templates, sample questions, reference answers
+  tests/                 unit and end-to-end tests (mock model, no key needed)
+  app/                   FastAPI app used by the web interface
+frontend/                Next.js web interface
+docs/ARCHITECTURE.md     design notes
 ```
 
-## Limitations and next steps
+## AI usage
 
-_Be honest, judges like it. Example: answers depend on data quality; large files are trimmed; no user accounts yet._
+| Category | Used |
+|---|---|
+| Models called by the code | **Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`) via the Google AI Studio API (`google-genai` SDK). Used for bill extraction, full transcription, repair re-reads and Level 2 answers. |
+| Other AI APIs or services | none |
+| OCR or document-extraction services | none (no local OCR either) |
+| AI tools used to write the code | Claude Code (Anthropic's Claude), used as a pair programmer for design, code and tests |
+
+Where the model is used, and where it is not: the model reads the bill and writes explanations. Everything
+with a fixed rule is code: the provider, number and date formats, type mapping, consistency checks and all
+arithmetic in answers.
+
+## Limitations
+
+- Values hidden under grey boxes or too blurry to read are returned as `null`, as the guide requires.
+- Net metering bills with several meter registers: `previous_reading` and `current_reading` are `null`,
+  because the bill has no single reading pair. `units_consumed` is used when one total is printed.
+- The layout guides cover KE, LESCO and IESCO; another provider's bill would be read with the generic rules only.
+- Level 2 answers use only what is printed on the bill; questions that need outside tariff data are answered
+  with what the bill shows and a note on what it does not show.
 
 ## Team
 
