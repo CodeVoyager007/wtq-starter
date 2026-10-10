@@ -146,6 +146,31 @@ def test_cross_check_covers_dates_month_and_tariff():
         assert text in issues[0]
 
 
+def test_reconcile_fixes_one_value_when_sum_and_transcript_agree():
+    misread = dict(TRUTH_0008, total_taxes=558.62)
+    fixed, fixes = validate.reconcile(misread, TRANSCRIPT_0008)
+    assert fixed["total_taxes"] == 569.62 and len(fixes) == 1
+    assert validate.check(fixed) == []
+
+
+def test_reconcile_leaves_the_bill_alone_without_agreement():
+    two_wrong = dict(TRUTH_0008, total_taxes=558.62, total_charges=2865.62)
+    assert validate.reconcile(two_wrong, TRANSCRIPT_0008) == (two_wrong, [])
+    not_printed = dict(TRUTH_0008, total_taxes=558.62)
+    transcript = {"sections": [{"name": "x", "items": [{"label": "n", "value": str(v)} for v in range(100, 130)]}]}
+    assert validate.reconcile(not_printed, transcript)[1] == []
+
+
+def test_reconcile_fixes_lesco_arrears():
+    bill = {"provider": "LESCO", "current_bill": 5501, "arrears": 3941172, "payable_within_due_date": 44912,
+            "total_charges": None, "total_taxes": None, "previous_reading": None, "units_consumed": None,
+            "current_reading": None}
+    transcript = {"sections": [{"name": "x", "items": [{"label": "n", "value": v} for v in
+                  ["5501", "39411 / 2", "44912", "3,777.49", "1,723.51"] + [str(i) for i in range(20)]]}]}
+    fixed, fixes = validate.reconcile(bill, transcript)
+    assert fixed["arrears"] == 39411 and fixes
+
+
 def test_cross_check_is_skipped_when_transcription_failed():
     assert validate.cross_check(dict(TRUTH_0008, total_taxes=1), None) == []
 
@@ -243,6 +268,7 @@ def test_missing_image_still_writes_a_valid_row(tmp_path):
 
 def test_small_images_are_upscaled(tmp_path):
     from PIL import Image as PILImage
+
     from bill_decoder import imaging
     path = tmp_path / "LESCO_1.png"
     PILImage.new("RGB", (360, 400), "white").save(path)
@@ -299,6 +325,7 @@ def test_disallowed_model_is_refused(tmp_path):
 
 def test_bill_api_decodes_and_answers(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
+
     from app import bills
     from app.main import app
 

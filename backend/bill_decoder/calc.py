@@ -21,6 +21,7 @@ _COMPARE = {
     ast.Eq: operator.eq, ast.NotEq: operator.ne,
 }
 _MAX_ITEMS = 1000
+_MAX_EXPRESSION_CHARS = 2000
 
 
 def _flatten(args):
@@ -56,6 +57,8 @@ class CalcError(ValueError):
 
 
 def evaluate(expression: str, names: dict | None = None, allow_list: bool = False):
+    if len(str(expression)) > _MAX_EXPRESSION_CHARS:
+        raise CalcError("expression too long")
     try:
         value = _eval(ast.parse(str(expression).strip(), mode="eval").body, dict(names or {}))
     except CalcError:
@@ -89,7 +92,7 @@ def _eval(node, env: dict):
         return _UNARY[type(node.op)](_eval(node.operand, env))
     if isinstance(node, ast.Compare) and all(type(op) in _COMPARE for op in node.ops):
         left = _eval(node.left, env)
-        for op, comparator in zip(node.ops, node.comparators):
+        for op, comparator in zip(node.ops, node.comparators, strict=True):
             right = _eval(comparator, env)
             if not _COMPARE[type(op)](left, right):
                 return False
@@ -135,7 +138,7 @@ def _bind(target, value, scope: dict) -> None:
     if isinstance(target, ast.Name):
         scope[target.id] = value
     elif isinstance(target, ast.Tuple) and isinstance(value, list) and len(target.elts) == len(value):
-        for t, v in zip(target.elts, value):
+        for t, v in zip(target.elts, value, strict=True):
             _bind(t, v, scope)
     else:
         raise CalcError("unsupported loop variable")

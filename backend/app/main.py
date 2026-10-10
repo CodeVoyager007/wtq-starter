@@ -20,7 +20,8 @@ app.include_router(bills.router)
 
 @app.exception_handler(LLMError)
 async def llm_error(_, exc: LLMError):
-    return JSONResponse(status_code=502, content={"detail": "The AI model is not responding right now. Try again in a minute."})
+    detail = "The AI model is not responding right now. Try again in a minute."
+    return JSONResponse(status_code=502, content={"detail": detail})
 
 
 @app.exception_handler(bill_config.ConfigError)

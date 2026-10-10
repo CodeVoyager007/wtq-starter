@@ -151,3 +151,50 @@ def _cross_check_text(bill: dict, transcript: dict) -> list[str]:
         return []
     return [f"These extracted text values do not match anything in an independent transcription "
             f"of the bill, so they may be misread: {', '.join(unseen)}."]
+
+
+# Sums the bill itself prints: (parts, total, providers it applies to; None = all).
+_IDENTITIES = (
+    (("total_charges", "total_taxes"), "current_bill", None),
+    (("current_bill", "arrears"), "payable_within_due_date", {"LESCO"}),
+    (("previous_reading", "units_consumed"), "current_reading", None),
+)
+
+
+def _printed(value: float, printed: set[float]) -> bool:
+    return any(abs(abs(value) - p) <= 0.011 for p in printed)
+
+
+def reconcile(bill: dict, transcript: dict | None) -> tuple[dict, list[str]]:
+    """Fix a value only when two independent sources agree on the correction.
+
+    If a printed sum does not add up and exactly one of its values is missing from the
+    transcript, solve the sum for that value. Replace it only if the solved number is
+    itself printed on the bill (per the transcript). Otherwise leave the bill unchanged.
+    """
+    printed = transcript_numbers(transcript)
+    if len(printed) < _MIN_TRANSCRIPT_NUMBERS:
+        return bill, []
+    bill, fixes = dict(bill), []
+    for parts, total, providers in _IDENTITIES:
+        if providers and bill.get("provider") not in providers:
+            continue
+        fields = (*parts, total)
+        if any(bill.get(f) is None for f in fields):
+            continue
+        if _close(sum(bill[p] for p in parts), bill[total]):
+            continue
+        unsupported = [f for f in fields if not _printed(bill[f], printed)]
+        if len(unsupported) != 1:
+            continue
+        target = unsupported[0]
+        if target == total:
+            solved = sum(bill[p] for p in parts)
+        else:
+            solved = bill[total] - sum(bill[p] for p in parts if p != target)
+        solved = round(solved, 2)
+        if _printed(solved, printed):
+            fixes.append(f"{target}: {bill[target]} -> {solved} "
+                         f"(makes {' + '.join(parts)} = {total} and is printed on the bill)")
+            bill[target] = int(solved) if float(solved).is_integer() else solved
+    return bill, fixes

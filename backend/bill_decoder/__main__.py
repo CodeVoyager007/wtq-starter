@@ -35,7 +35,8 @@ def _cmd_templates(args) -> int:
     bills = sorted(p.stem for p in Path(args.bills).iterdir() if p.suffix.lower() in imaging.IMAGE_SUFFIXES)
     questions = []
     if args.questions:
-        lines = [l.strip() for l in Path(args.questions).read_text(encoding="utf-8").splitlines() if l.strip()]
+        text = Path(args.questions).read_text(encoding="utf-8")
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
         questions = [(f"Q{i}", q) for i, q in enumerate(lines, 1)]
     csv_io.make_templates(bills, questions, Path(args.csv))
     print(f"Templates for {len(bills)} bills and {len(questions)} questions written to {args.csv}")

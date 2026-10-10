@@ -50,7 +50,7 @@ def _tidy(number: float) -> int | float:
 
 # ---------------------------------------------------------------- dates
 
-_DATE_FORMATS = ("%Y-%m-%d", "%d %b %Y", "%d %B %Y", "%d %b %y", "%d %B %y", "%d %m %Y", "%d %m %y")
+_DATE_FORMATS = ("%Y-%m-%d", "%Y %m %d", "%d %b %Y", "%d %B %Y", "%d %b %y", "%d %B %y", "%d %m %Y", "%d %m %y")
 _MONTH_FORMATS = ("%Y-%m", "%b %Y", "%B %Y", "%b %y", "%B %y", "%m %Y", "%m %y")
 
 
@@ -119,7 +119,9 @@ _TAX_KEYWORDS = (
 )
 _TAX_ALIASES = {"ed": "electricity_duty", "sales_tax": "gst", "salestax": "gst"}
 _CHARGE_ALIASES = {"fca": "fpa", "qta": "quarterly_adjustment", "uqa": "quarterly_adjustment", "phl": "surcharge"}
-_COMBINED_TAX_LABELS = {"taxes", "tax", "total taxes", "taxes and duties", "govt taxes", "government taxes", "govt. taxes"}
+_COMBINED_TAX_LABELS = {
+    "taxes", "tax", "total taxes", "taxes and duties", "govt taxes", "government taxes", "govt. taxes",
+}
 
 
 def _slug(text) -> str:
@@ -172,7 +174,7 @@ def _drop_subtotal_line(lines: list[dict], total) -> list[dict]:
         return lines
     for i, line in enumerate(lines):
         rest = lines[:i] + lines[i + 1:]
-        if abs(line["amount"] - total) <= 1 and abs(sum(l["amount"] for l in rest) - total) <= 1:
+        if abs(line["amount"] - total) <= 1 and abs(sum(other["amount"] for other in rest) - total) <= 1:
             return rest
     return lines
 
@@ -204,8 +206,8 @@ def to_level1(raw: dict | None, bill_id: str) -> dict:
             bill["total_taxes"] = taxes[0]["amount"]
         taxes = []
     taxes = _drop_subtotal_line(taxes, bill["total_taxes"])
-    bill["charges"] = [{"type": l["type"], "amount": l["amount"]} for l in charges]
-    bill["taxes"] = [{"type": l["type"], "amount": l["amount"]} for l in taxes]
+    bill["charges"] = [{"type": c["type"], "amount": c["amount"]} for c in charges]
+    bill["taxes"] = [{"type": t["type"], "amount": t["amount"]} for t in taxes]
 
     late = [a for a in (parse_amount(v) for v in raw.get("late_payment_amounts") or []) if a is not None]
     bill["payable_after_due_date"] = max(late) if late else None

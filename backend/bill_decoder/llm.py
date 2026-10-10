@@ -13,15 +13,17 @@ import json
 import logging
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 from .config import Settings
 
 log = logging.getLogger(__name__)
 
 SEED = 7
+# Errors a retry cannot fix (bad request, bad key, unknown model): fail fast.
+_PERMANENT_ERRORS = ("400", "INVALID_ARGUMENT", "401", "403", "PERMISSION_DENIED", "404", "NOT_FOUND")
 MAX_ATTEMPTS = 6
 
 
@@ -128,7 +130,7 @@ class Client:
                     log.warning("model does not accept media_resolution; continuing without it")
                     self._high_detail = False
                     continue
-                if any(code in message for code in ("400", "INVALID_ARGUMENT", "401", "403", "PERMISSION_DENIED", "404", "NOT_FOUND")):
+                if any(code in message for code in _PERMANENT_ERRORS):
                     raise LLMError(f"request rejected: {message[:300]}") from exc
                 if "429" in message or "RESOURCE_EXHAUSTED" in message:
                     self._rotate_key()
@@ -161,9 +163,12 @@ def _parse_json(text: str) -> dict:
         value = json.loads(cleaned)
     except json.JSONDecodeError:
         start, end = cleaned.find("{"), cleaned.rfind("}")
-        if start == -1 or end <= start:
-            raise LLMError(f"model did not return JSON: {text[:200]}")
-        value = json.loads(cleaned[start:end + 1])
+        try:
+            value = json.loads(cleaned[start:end + 1]) if 0 <= start < end else None
+        except json.JSONDecodeError:
+            value = None
+    if value is None:
+        raise LLMError(f"model did not return valid JSON: {text[:200]}")
     if not isinstance(value, dict):
         raise LLMError("model returned JSON that is not an object")
     return value

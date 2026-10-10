@@ -46,9 +46,25 @@ uv run python -m bill_decoder check --out output --csv <csv-folder>
 # Check, then build the submission ZIP (refuses if anything looks like an API key)
 uv run python -m bill_decoder package --out output --csv <csv-folder> --zip submission.zip --include-cache
 
-# Unit tests (no API key needed)
+# Tests (no API key needed) and lint
 uv run pytest -q
+uvx ruff check .
 ```
+
+### Web interface (optional, for the demo)
+
+```powershell
+# terminal 1, in backend/
+uv run uvicorn app.main:app --port 8000
+# terminal 2, in frontend/ (Node.js 20+)
+npm install
+npm run dev
+```
+
+Open http://localhost:3000/app, upload a bill, see the extracted details and checks, and ask questions.
+The web API uses the same `bill_decoder` code as the command line. It bounds traffic: 10 MB uploads,
+5 decodes per minute per client, 3 decodes in parallel (the free model tier allows about 15 requests/min),
+a bounded in-memory store behind unguessable tokens, and 500-character questions.
 
 Training example: `uv run python -m bill_decoder run --bills data/train/bills --csv data/train/csv --out output`
 (the training templates were built with the `templates` command from `data/train/questions.txt`).
@@ -76,6 +92,8 @@ bill image ─┬─> extraction call ──> normalize (code) ──┐
    that every extracted amount, date, month and tariff also appears in the independent transcription.
 6. **Repair** (at most 1 call): if a check fails, the model re-reads the bill with the failed checks and the
    transcript as evidence. The reading with fewer failed checks is kept.
+   If a printed sum still does not add up, code corrects **one** value only when two independent sources agree:
+   solving the sum gives a number that the transcript shows printed on the bill (`validate.reconcile`).
 7. **Level 2** (1 call per bill for all questions): the model gets the checked facts, the transcript and the
    image. It writes the reasoning and **calculation expressions**; a safe evaluator in Python
    (`calc.py`, no `eval`) computes every number. A failed calculation is retried once with the error, then
@@ -110,6 +128,8 @@ All settings are environment variables in `backend/.env` (template: `.env.exampl
 | `REQUESTS_PER_MINUTE` | Client-side rate limit | `12` |
 | `CACHE_DIR` | Cache folder, relative to `backend/` | `.cache` |
 | `LLM_MOCK` | `1` = no model calls (tests only) | unset |
+| `FRONTEND_ORIGINS` | Web API: allowed browser origins | `http://localhost:3000` |
+| `MAX_UPLOAD_MB`, `DECODES_PER_IP_PER_MINUTE`, `MAX_CONCURRENT_DECODES` | Web API traffic limits | `10`, `5`, `3` |
 
 ## Project structure
 
@@ -129,8 +149,9 @@ backend/
     schema.py            Level 1 field list and the JSON schemas sent to the model
     csv_io.py, package.py, evaluate.py, config.py
   data/train/            training bills, templates, sample questions, reference answers
-  tests/                 unit and end-to-end tests (mock model, no key needed)
-  app/                   FastAPI app used by the web interface
+  data/stress/           tilted and low-resolution copies of the training bills (robustness test)
+  tests/                 unit, end-to-end and edge-case tests (mock model, no key needed)
+  app/                   FastAPI web API (bills.py) used by the web interface
 frontend/                Next.js web interface
 docs/ARCHITECTURE.md     design notes
 ```
@@ -147,6 +168,17 @@ docs/ARCHITECTURE.md     design notes
 Where the model is used, and where it is not: the model reads the bill and writes explanations. Everything
 with a fixed rule is code: the provider, number and date formats, type mapping, consistency checks and all
 arithmetic in answers.
+
+## Results on the training data
+
+| Set | Level 1 fields correct |
+|---|---|
+| 5 training bills | 90 / 90 |
+| Same bills tilted 7° and JPEG-compressed | 88 / 90 |
+| Same bills at half resolution and blurred (two below 400 px wide) | 53 / 90 |
+
+Reference answers: `KESC_0008` is the official example (guide 5.7); the other four were read by hand
+(`backend/data/train/truth/README.md` lists the judgment calls).
 
 ## Limitations
 

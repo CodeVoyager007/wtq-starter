@@ -41,9 +41,13 @@ class Settings:
         """Fail fast on anything that would waste a run or break the rules."""
         allowed = ALLOWED_MODELS.get(self.provider)
         if allowed is None:
-            raise ConfigError(f"MODEL_PROVIDER '{self.provider}' is not supported. Use one of {sorted(ALLOWED_MODELS)}.")
+            raise ConfigError(
+                f"MODEL_PROVIDER '{self.provider}' is not supported. Use one of {sorted(ALLOWED_MODELS)}."
+            )
         if self.model not in allowed:
-            raise ConfigError(f"MODEL_NAME '{self.model}' is not on the allowed list for {self.provider}: {sorted(allowed)}.")
+            raise ConfigError(
+                f"MODEL_NAME '{self.model}' is not on the allowed list for {self.provider}: {sorted(allowed)}."
+            )
         if self.provider != "google":
             raise ConfigError("Only the google provider is implemented. Set MODEL_PROVIDER=google.")
         if not self.mock and not self.api_keys:

@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def run(client: Client, bills_dir: Path, csv_dir: Path, out_dir: Path, levels: set[int] = frozenset({1, 2})) -> dict:
+    out_dir.mkdir(parents=True, exist_ok=True)
     l1_cols, l1_rows = csv_io.read(csv_dir / "level1.csv")
     l2_path = csv_dir / "level2.csv"
     l2_cols, l2_rows = csv_io.read(l2_path) if l2_path.exists() else (csv_io.LEVEL2_COLUMNS, [])

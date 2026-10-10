@@ -23,3 +23,15 @@ dev = [
 pythonpath = ["."]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["B008"]  # FastAPI's File(...) / Form(...) defaults are the framework's idiom
+
+[tool.ruff.lint.per-file-ignores]
+"bill_decoder/prompts.py" = ["E501"]  # prompt text reads better unwrapped
+"tests/*" = ["E501"]

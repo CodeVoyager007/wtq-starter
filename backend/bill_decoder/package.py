@@ -15,7 +15,9 @@ SKIP_DIRS = {".git", ".venv", "node_modules", ".next", "__pycache__", ".pytest_c
 SKIP_FILES = {".env", ".DS_Store"}
 SKIP_SUFFIXES = {".zip", ".pyc"}
 BILL_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
-SECRET_PATTERNS = [re.compile(p) for p in (r"AIza[0-9A-Za-z_\-]{30,}", r"sk-[A-Za-z0-9_\-]{20,}", r"sk-ant-[A-Za-z0-9_\-]{20,}")]
+SECRET_PATTERNS = [
+    re.compile(p) for p in (r"AIza[0-9A-Za-z_\-]{30,}", r"sk-[A-Za-z0-9_\-]{20,}", r"sk-ant-[A-Za-z0-9_\-]{20,}")
+]
 
 
 def check_outputs(out_dir: Path, template_dir: Path) -> list[str]:
@@ -32,7 +34,7 @@ def check_outputs(out_dir: Path, template_dir: Path) -> list[str]:
             problems.append(f"{name}: columns {out_cols} differ from template {tpl_cols}")
         if len(out_rows) != len(tpl_rows):
             problems.append(f"{name}: {len(out_rows)} rows, template has {len(tpl_rows)}")
-        for i, (out, tpl) in enumerate(zip(out_rows, tpl_rows), start=2):
+        for i, (out, tpl) in enumerate(zip(out_rows, tpl_rows, strict=False), start=2):  # counts checked above
             for col in tpl_cols:
                 if col != value_col and out.get(col) != tpl.get(col):
                     problems.append(f"{name} line {i}: {col} changed from {tpl.get(col)!r}")

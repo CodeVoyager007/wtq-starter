@@ -2,8 +2,9 @@
 
 Flow: extract (1 call) + full transcription (1 call, independent second reading)
 -> normalize -> arithmetic checks + cross-check against the transcript
--> repair once (with the transcript as evidence) if anything fails.
-The version with fewer failed checks wins; ties keep the first reading.
+-> repair once (with the transcript as evidence) if anything fails; the reading with
+fewer failed checks wins -> if a sum still fails, correct a single value only when
+the sum and the transcript agree on it (validate.reconcile).
 """
 from __future__ import annotations
 
@@ -55,8 +56,17 @@ def extract_bill(client: Client, bill_id: str, image: Image) -> Extraction:
     )
     repaired, repaired_issues = checked(repaired_raw)
     if len(repaired_issues) < len(issues):
-        return result(repaired_raw, repaired, repaired_issues, repaired=True)
-    return result(raw, level1, issues)
+        raw, level1, issues, was_repaired = repaired_raw, repaired, repaired_issues, True
+    else:
+        was_repaired = False
+
+    if issues:
+        level1, fixes = validate.reconcile(level1, transcript)
+        if fixes:
+            log.info("%s: corrected from the bill's own sums and the transcript: %s", bill_id, fixes)
+            issues = validate.check(level1) + validate.cross_check(level1, transcript)
+            was_repaired = True
+    return result(raw, level1, issues, was_repaired)
 
 
 def transcribe(client: Client, bill_id: str, provider: str | None, image: Image) -> dict | None:
