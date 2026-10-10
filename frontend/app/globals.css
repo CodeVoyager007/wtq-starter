@@ -2,8 +2,7 @@
 
 /* ---------- THEME: "Ember on black". Change the whole look from this one block ----------
    Near-black cinema base with one warm accent family taken from the K-Electric bill's orange.
-   Token names are kept from the starter so components need no changes:
-   teal = primary accent, teal-dark = warm highlight, sky = raised surface. */
+   Token names: teal = primary accent, teal-dark = warm highlight, sky = raised surface. */
 @theme {
   --color-mist: #050505; /* base: ink black */
   --color-card: #0f0d0b; /* raised panels */
@@ -114,7 +113,7 @@ body {
   outline: none;
 }
 
-/* Photo areas (page headers, hero). The dark overlay keeps text readable on any photo */
+/* Page headers and hero: ember glow on black */
 /* Page headers: an ember glow on black instead of photos */
 .photo-bg {
   position: relative;
@@ -123,9 +122,6 @@ body {
   background: radial-gradient(ellipse 70% 90% at 15% 0%, rgb(255 122 26 / 0.28), transparent 60%),
     radial-gradient(ellipse 50% 70% at 90% 10%, rgb(232 64 28 / 0.22), transparent 65%), #050505;
   border-bottom: 1px solid var(--color-line);
-}
-.photo-bg > img {
-  display: none;
 }
 
 .script {

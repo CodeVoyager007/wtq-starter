@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
-import { images, siteConfig } from "@/lib/config";
+import { siteConfig } from "@/lib/config";
 
 export const metadata: Metadata = { title: `How it works · ${siteConfig.name}` };
 
@@ -11,7 +11,6 @@ export default function HowItWorks() {
     <PageHeader
       title="How it works"
       text="A short look at our approach, so you can judge the thinking and not just the screen."
-      image={images.headerHow}
     />
     <div className="mx-auto max-w-4xl px-5 pt-4">
 

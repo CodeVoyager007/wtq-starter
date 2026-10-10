@@ -1,12 +1,10 @@
-import Photo from "@/components/Photo";
 import Link from "next/link";
-import { images, siteConfig } from "@/lib/config";
+import { siteConfig } from "@/lib/config";
 
 export default function Home() {
   return (
     <>
       <section className="photo-bg">
-        <Photo pic={images.hero} priority className="absolute inset-0 -z-10 h-full w-full object-cover" />
         <div className="mx-auto max-w-4xl px-5 pb-24 pt-20 text-center sm:pt-32">
           {siteConfig.label && (
             <p className="mb-4 text-sm uppercase tracking-[0.25em] text-muted">{siteConfig.label}</p>

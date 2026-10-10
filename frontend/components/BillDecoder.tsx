@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { images } from "@/lib/config";
 import type { BillLine, DecodedBill, Level1 } from "@/lib/types";
 import PageHeader from "./PageHeader";
 
@@ -235,7 +234,6 @@ export default function BillDecoder() {
       <PageHeader
         title="Decode a bill"
         text="Upload a K-Electric, LESCO or IESCO bill. Every value is read, checked against the bill's own sums, and explained in plain English."
-        image={images.headerWorkspace}
       />
 
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:py-14">

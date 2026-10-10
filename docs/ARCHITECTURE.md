@@ -1,6 +1,6 @@
 # Utility Bill Decoder: Architecture and System Design
 
-Status: draft v1 (before judging criteria review). Owner: Ayesha Mughal.
+Owner: Ayesha Mughal. Describes the submitted version; the README has run steps and results.
 
 ## 1. Goal and constraints
 
@@ -18,7 +18,7 @@ Hard constraints from the participant guide:
 | Single submission, no hand edits | The pipeline writes the CSVs itself. A packaging command validates and zips. |
 | Numbers scored within ±1, text/dates exact | Deterministic post-processing in code. The LLM only reads the bill. |
 | `null` is scored correct when a value is missing | The model never guesses: "if not printed or covered, null". Code never fills gaps with invented values. |
-| Python 3.11+, pinned `requirements.txt` | Reuse the starter's `backend/` uv project. |
+| Python 3.11+, pinned `requirements.txt` | uv project in `backend/`, `requirements.txt` exported from `uv.lock`. |
 
 ## 2. What the training bills tell us
 
@@ -163,8 +163,13 @@ uv run python -m bill_decoder package --out output/ --zip submission.zip
 - Golden test: KESC_0008 normalized output matches guide 5.7 (needs one live call, or the cached response).
 - Smoke: mock LLM mode runs the full pipeline end to end on the training folder.
 
-## 10. Out of scope until the core scores
+## 10. Web interface
 
-- Frontend changes (kept intact; later it can call `bill_decoder` through one FastAPI route for the demo).
-- Local OCR (allowed, but adds install risk; reconsider only if the model misreads digits).
-- Self-consistency voting (n=3) on extraction: only if the quota allows after the core works.
+`backend/app/bills.py` exposes the same `bill_decoder` code over HTTP (`POST /api/bill`, `POST /api/bill/ask`)
+for the Next.js page in `frontend/`. Traffic is bounded: 10 MB uploads, per-IP rate limit, a cap on parallel
+decodes (the free model tier is the real limit), a bounded in-memory store behind unguessable tokens.
+
+## 11. Not done, and why
+
+- Local OCR: allowed, but adds install risk; the transcript cross-check covers the same need.
+- Self-consistency voting (several extraction calls per bill): costs 2-3x the free-tier quota.

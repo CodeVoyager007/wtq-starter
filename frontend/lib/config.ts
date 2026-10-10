@@ -1,24 +1,6 @@
 /** Site text and settings. The pages read everything from here. */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-/**
- * Pictures. Each one loads a real Unsplash photo (free to use, needs internet). If it cannot load,
- * the local generated image in frontend/public/images is shown instead, so the page never looks broken.
- * To swap a photo: change the `src` link, or replace the local file named in `fallback`.
- * Photo credits: see public/images/CREDITS.txt
- */
-export const images = {
-  hero: { src: "https://images.unsplash.com/photo-1609079332148-ce057e967197?auto=format&fit=crop&w=2000&q=75", fallback: "/images/hero.jpg", alt: "Sunlight filtering through deep blue ocean water" },
-  headerHow: { src: "https://images.unsplash.com/photo-1783825772143-a2affdca150f?auto=format&fit=crop&w=2000&q=75", fallback: "/images/header-how.jpg", alt: "Dark blue water with small ripples" },
-  headerWorkspace: { src: "https://images.unsplash.com/photo-1786311577577-897df260bf34?auto=format&fit=crop&w=2000&q=75", fallback: "/images/header-workspace.jpg", alt: "Deep blue water ripples" },
-  steps: [
-    { src: "https://images.unsplash.com/photo-1549074862-6173e20d02a8?auto=format&fit=crop&w=900&q=75", fallback: "/images/step-1.jpg", alt: "Bubbles rising through blue water" },
-    { src: "https://images.unsplash.com/photo-1476897017502-219c9169bd6f?auto=format&fit=crop&w=900&q=75", fallback: "/images/step-2.jpg", alt: "Rippling blue ocean surface" },
-    { src: "https://images.unsplash.com/photo-1764848084652-66719e701262?auto=format&fit=crop&w=900&q=75", fallback: "/images/step-3.jpg", alt: "Abstract blue textured background" },
-  ],
-  empty: { src: "https://images.unsplash.com/photo-1672577979719-450e2e75a689?auto=format&fit=crop&w=1000&q=75", fallback: "/images/empty.jpg", alt: "Dark blue ocean water with small waves" },
-};
-
 export const siteConfig = {
   name: "Bill Decoder",
   label: "AI electricity bill assistant", // small line above the title on Home. Leave "" to hide it
