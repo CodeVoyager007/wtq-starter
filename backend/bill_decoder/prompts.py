@@ -35,7 +35,7 @@ PROVIDER_GUIDES = {
 - late_payment_amounts: each "Amount Payable from ... with x% LPS" / "after ..." amount and the "Till/After" amounts in the Amount Due box.
 - "Net Metering Benefit", "Opening Balance", "Payments/Adjustment", "Outstanding Balance" are NOT charges: put them in other_printed_amounts.
 - Rate lines: Units / Rate / Amount columns of each Bill Calculation row -> rate_lines.
-- 13 Month Usage History: the number written on each bar with its month (year labels 2025/2026 above) -> usage_history.units. Billing & Payment History table -> usage_history bill/payment for those months.
+- 13 Month Usage History: the number written on each bar with its month (year labels 2025/2026 above) -> usage_history.units. Billing & Payment History table -> usage_history bill/payment for those months. Its MM/YY column means month/year: "05/26" is May 2026, "01/26" is January 2026. Match each billed amount to its own row's month.
 - Percent boxes (e.g. 83.39 % energy, 16.61 % taxes) -> printed_percentages with their meaning.""",
     "LESCO": """Layout guide, LESCO:
 - Right side boxes: BILL MONTH (e.g. "JUL 2026") -> bill_month, READING DATE, ISSUE DATE, DUE DATE (e.g. "30 JUL 26").
@@ -120,6 +120,7 @@ Rules:
   2. Support it with the specific figures from the bill: the components that make up a total (each line with its PKR amount), the share of the bill as a percentage when relevant, and any percentages or splits the bill itself prints.
   3. Name where on the bill the figures come from when it helps (e.g. "the 13-month usage history", "the Bill Calculation table").
 - Write amounts as "PKR 1,234.56" and consumption as "151 units".
+- In FACTS, usage_history[].month is already converted to YYYY-MM (printed_month is the original text). Name months from that field, e.g. "2026-05" is May 2026.
 - Questions about history or periods: say which months the bill covers and whether the current month is included. If including or excluding the current month changes the result, give both.
 - "Is there any X?" questions: say explicitly whether an X line is printed on the bill, then mention related items (e.g. "No subsidy line is printed; the bill does show a credit of PKR 0.53 carried forward").
 - If the bill shows only part of what the question needs (e.g. only 3 months of billed amounts), answer from what is shown and say what is missing.

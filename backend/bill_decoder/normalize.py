@@ -56,6 +56,7 @@ _MONTH_FORMATS = ("%Y-%m", "%b %Y", "%B %Y", "%b %y", "%B %y", "%m %Y", "%m %y")
 
 def _date_tokens(text: str) -> str:
     text = re.sub(r"(?i)(\d)(st|nd|rd|th)\b", r"\1", text.strip())
+    text = re.sub(r"(?<=[A-Za-z])(?=\d)|(?<=\d)(?=[A-Za-z])", " ", text)  # "Sep25" -> "Sep 25"
     return re.sub(r"[\s/\-.,]+", " ", text).strip()
 
 
@@ -229,7 +230,8 @@ def clean_facts(raw: dict | None, bill_id: str) -> dict:
     facts["late_payment_amounts"] = [parse_amount(v) for v in raw.get("late_payment_amounts") or []]
     facts["late_payment_surcharge"] = [parse_amount(v) for v in raw.get("late_payment_surcharge") or []]
     facts["usage_history"] = [
-        {"month": h.get("month"), "units": parse_amount(h.get("units")),
+        {"month": parse_month(h.get("month")) or h.get("month"), "printed_month": h.get("month"),
+         "units": parse_amount(h.get("units")),
          "bill": parse_amount(h.get("bill")), "payment": parse_amount(h.get("payment"))}
         for h in raw.get("usage_history") or [] if isinstance(h, dict)
     ]

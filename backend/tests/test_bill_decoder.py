@@ -64,7 +64,7 @@ def test_parse_date(text, expected):
 
 @pytest.mark.parametrize("text,expected", [
     ("MAR 2026", "2026-03"), ("Apr-26", "2026-04"), ("JUL 2026", "2026-07"), ("SEP 26", "2026-09"),
-    ("2026-04", "2026-04"),
+    ("2026-04", "2026-04"), ("05/26", "2026-05"), ("Sep25", "2025-09"), ("JUL 25", "2025-07"), ("Jul 2025", "2025-07"),
 ])
 def test_parse_month(text, expected):
     assert normalize.parse_month(text) == expected
