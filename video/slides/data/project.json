@@ -6,12 +6,12 @@
   "model": "gemini-3.5-flash-lite",
   "stats": [
     {
-      "value": "10",
-      "label": "Test bills decoded"
+      "value": "18",
+      "label": "Fields per bill"
     },
     {
-      "value": "120",
-      "label": "Questions answered"
+      "value": "12",
+      "label": "Questions per bill"
     },
     {
       "value": "3",
@@ -33,6 +33,11 @@
       "num": "03",
       "title": "Explain",
       "sub": "Level 2 · Ask about the same bill"
+    },
+    {
+      "num": "04",
+      "title": "Batch Run",
+      "sub": "Test bills → level1.csv + level2.csv"
     }
   ]
 }

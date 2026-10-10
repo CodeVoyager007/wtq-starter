@@ -90,6 +90,36 @@
       "page": "answers.html?bill=IESCO_0005"
     },
     {
+      "type": "chapter",
+      "i": 3
+    },
+    {
+      "type": "clip",
+      "file": "raw/04_run.mp4",
+      "num": "04",
+      "cap": "Run the solution on the test bills folder",
+      "crop": [
+        418,
+        350,
+        792,
+        96
+      ],
+      "hold": 1.2
+    },
+    {
+      "type": "clip",
+      "file": "raw/04_check.mp4",
+      "num": "04",
+      "cap": "Check the generated level1.csv and level2.csv",
+      "crop": [
+        418,
+        540,
+        792,
+        116
+      ],
+      "hold": 1.5
+    },
+    {
       "type": "outro"
     }
   ]
