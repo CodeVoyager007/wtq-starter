@@ -2,63 +2,102 @@
 <html><head><meta charset="utf-8"><title>Answers Sequence</title>
 <link rel="stylesheet" href="common.css">
 <style>
-  #head { position: absolute; left: 120px; top: 70px; display: flex; align-items: baseline; gap: 28px; }
+  #head { position: absolute; left: 100px; top: 60px; display: flex; align-items: baseline; gap: 28px; }
   #head h1 { margin: 0; font: 64px Anton; letter-spacing: 3px; text-transform: uppercase; }
-  #count { position: absolute; right: 120px; top: 82px; font: 40px Bebas; letter-spacing: 8px; color: var(--dim); }
+  #count { position: absolute; right: 100px; top: 72px; font: 40px Bebas; letter-spacing: 8px; color: var(--dim); }
   #count b { color: var(--orange); font-weight: normal; }
-  #card { position: absolute; left: 120px; right: 120px; top: 200px; }
-  #q { font: 76px/1.05 Anton; color: var(--cream); text-transform: none; max-width: 1500px; }
-  #q::before { content: 'Q'; display: inline-block; font: 76px Anton; color: var(--ink); background: var(--orange);
-               width: 92px; text-align: center; margin-right: 30px; border-radius: 8px; }
-  #calc { display: inline-flex; gap: 18px; align-items: center; margin-top: 48px; padding: 16px 28px; border-radius: 10px;
+  #card { position: absolute; left: 100px; width: 1080px; top: 180px; }
+  #q { font: 72px/1.05 Anton; color: var(--cream); display: flex; gap: 28px; }
+  #qbadge { flex: none; font: 72px Anton; color: var(--ink); background: var(--orange); width: 88px; height: 88px;
+            text-align: center; line-height: 88px; border-radius: 8px; box-shadow: 0 0 30px rgba(255,122,26,.5); }
+  #qtxt span { display: inline-block; white-space: pre; }
+  #calc { display: inline-flex; gap: 18px; align-items: center; margin-top: 40px; padding: 16px 26px; border-radius: 10px;
           background: #0c0a09; box-shadow: inset 0 0 0 2px rgba(255,122,26,.45), 0 0 40px rgba(255,122,26,.15);
-          font: 600 34px JBMono, monospace; color: #8fd3ff; }
+          font: 600 30px JBMono, monospace; color: #8fd3ff; position: relative; overflow: hidden; }
   #calc span { font: 26px Bebas; letter-spacing: 6px; color: var(--amber); }
-  #a { margin-top: 48px; font: 500 40px/1.5 JBMono, monospace; color: var(--cream); max-width: 1640px;
-       border-left: 6px solid var(--orange); padding-left: 34px; min-height: 240px; }
-  #a .cur { display: inline-block; width: 18px; height: 40px; background: var(--orange); vertical-align: -6px; margin-left: 4px; }
-  #grounded { margin-top: 30px; font: 30px Bebas; letter-spacing: 8px; color: #7ad87a; }
+  #calcShine { position: absolute; top: 0; bottom: 0; width: 120px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); }
+  #a { margin-top: 40px; font: 500 34px/1.5 JBMono, monospace; color: var(--cream);
+       border-left: 6px solid var(--orange); padding-left: 30px; min-height: 260px; }
+  #a .cur { display: inline-block; width: 16px; height: 34px; background: var(--orange); vertical-align: -5px; margin-left: 4px; }
+  #grounded { margin-top: 26px; font: 30px Bebas; letter-spacing: 8px; color: #7ad87a; }
+  #srcWrap { position: absolute; left: 1260px; top: 180px; width: 560px; }
+  #srcLbl { font: 28px Bebas; letter-spacing: 10px; color: var(--dim); margin-bottom: 14px; }
+  #view { position: relative; width: 560px; height: 700px; overflow: hidden; border-radius: 14px; background: #111;
+          box-shadow: 0 0 0 2px rgba(255,122,26,.35), 0 30px 80px rgba(0,0,0,.6); }
+  #cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #cam img { display: block; }
+  #box { position: absolute; border: 5px solid var(--orange); border-radius: 6px;
+         box-shadow: 0 0 0 4000px rgba(0,0,0,.5), 0 0 30px var(--orange); }
 </style></head>
 <body><div id="stage">
   <div class="layer glow"></div>
+  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
   <div id="head"><span class="kicker">LEVEL 2</span><h1>Ask the bill</h1></div>
   <div id="count"></div>
   <div id="card">
-    <div id="q"></div>
-    <div id="calc"><span>COMPUTED</span><div id="calcTxt"></div></div>
+    <div id="q"><div id="qbadge">Q</div><div id="qtxt"></div></div>
+    <div id="calc"><span>COMPUTED</span><div id="calcTxt"></div><div id="calcShine"></div></div>
     <div id="a"></div>
     <div id="grounded"></div>
   </div>
+  <div id="srcWrap"><div id="srcLbl">SOURCE ON THE BILL</div>
+    <div id="view"><div id="cam"><img id="bill"><div id="box"></div></div></div></div>
+  <div class="sweep" id="sw"></div>
   <div class="layer vignette"></div>
   <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
 </div>
 <script src="common.js"></script>
 <script>
-// Data-driven: data/level2.json items {q, calc, a}. Each item gets its own timed slot.
-const CPS = 55; let items = [], slots = [];
+// Data-driven: data/level2.json items {q, calc, a, source:[x0,y0,x1,y1] on the bill image}.
+const CPS = 55, VW = 560, VH = 700, BILL = params.get('bill') || 'KESC_0008';
+let items = [], slots = [], IW = 1446, IH = 2046, lastQ = -1;
 window.DUR = 20;
-window.assetsReady = loadJSON('data/level2.json').then(d => {
+window.assetsReady = Promise.all([loadJSON('data/level2.json'), loadImages([`../assets/${BILL}.png`])]).then(([d]) => {
+  $('bill').src = `../assets/${BILL}.png`; IW = $('bill').naturalWidth || IW; IH = $('bill').naturalHeight || IH;
   items = d.items; $('grounded').textContent = d.badge || '✓ Grounded in the bill'; let t = 0;
-  for (const it of items) { const len = 1.6 + it.a.length / CPS + 2.2; slots.push({ s: t, len }); t += len; }
+  for (const it of items) { const len = 1.8 + it.a.length / CPS + 2.2; slots.push({ s: t, len }); t += len; }
   window.DUR = t; return document.fonts.ready;
 }).then(() => render(0));
+function cam(b) {
+  if (!b) { const s = VH / IH; return { s, cx: IW / 2, cy: IH / 2 }; }
+  const s = clamp(Math.min(VW * 0.85 / (b[2] - b[0]), VH * 0.5 / (b[3] - b[1])), 0.3, 2.2);
+  return { s, cx: (b[0] + b[2]) / 2, cy: (b[1] + b[3]) / 2 };
+}
 window.render = t => {
   let i = slots.findIndex(s => t >= s.s && t < s.s + s.len); if (i < 0) i = items.length - 1;
   const it = items[i], lt = t - slots[i].s, len = slots[i].len;
-  const fade = ease(lt / 0.35) * (1 - clamp((lt - len + 0.35) / 0.35));
-  $('card').style.opacity = fade;
-  $('card').style.transform = `translateY(${lerp(30, 0, ease(lt / 0.5))}px)`;
-  $('q').textContent = it.q;
-  $('calcTxt').textContent = it.calc;
-  $('calc').style.opacity = ease((lt - 0.7) / 0.3);
-  $('calc').style.transform = `scale(${lerp(0.92, 1, ease((lt - 0.7) / 0.3))})`;
-  const n = Math.floor(clamp((lt - 1.4) * CPS, 0, it.a.length));
-  const typing = n < it.a.length && lt > 1.4;
+  const out = 1 - clamp((lt - len + 0.35) / 0.35);
+  $('card').style.opacity = out;
+  if (lastQ !== i) { // split question into words once per item
+    $('qtxt').innerHTML = it.q.split(' ').map(w => `<span>${w} </span>`).join(''); lastQ = i;
+    $('calcTxt').textContent = it.calc;
+  }
+  [...$('qtxt').children].forEach((w, j) => {
+    const k = ease((lt - 0.1 - j * 0.07) / 0.35);
+    w.style.opacity = k; w.style.transform = `translateY(${lerp(40, 0, k)}px)`; w.style.filter = `blur(${(1 - k) * 10}px)`;
+  });
+  $('qbadge').style.transform = `scale(${lerp(0.3, 1, ease(lt / 0.3))}) rotate(${lerp(-25, 0, ease(lt / 0.3))}deg)`;
+  const ck = ease((lt - 0.8) / 0.35);
+  $('calc').style.opacity = ck; $('calc').style.transform = `translateX(${lerp(-40, 0, ck)}px)`;
+  $('calcShine').style.left = `${lerp(-150, 1100, clamp((lt - 1.0) / 0.7))}px`;
+  const n = Math.floor(clamp((lt - 1.6) * CPS, 0, it.a.length));
+  const typing = n < it.a.length && lt > 1.6;
   $('a').innerHTML = it.a.slice(0, n).replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     (typing || Math.floor(lt * 2) % 2 ? '<span class="cur"></span>' : '');
-  $('grounded').style.opacity = ease((lt - 1.4 - it.a.length / CPS - 0.1) / 0.4);
+  $('grounded').style.opacity = ease((lt - 1.6 - it.a.length / CPS - 0.1) / 0.4);
+  // Source panel: fly from the whole bill to this answer's region
+  const a = cam(null), b = cam(it.source), m = easeIO((lt - 0.5) / 1.0);
+  const s = lerp(a.s, b.s, m), cx = lerp(a.cx, b.cx, m), cy = lerp(a.cy, b.cy, m);
+  $('cam').style.transform = `translate(${VW / 2 - cx * s}px, ${VH / 2 - cy * s}px) scale(${s})`;
+  const bx = it.source;
+  $('box').style.opacity = bx ? ease((lt - 1.4) / 0.3) : 0;
+  if (bx) Object.assign($('box').style, { left: bx[0] - 6 + 'px', top: bx[1] - 4 + 'px', width: bx[2] - bx[0] + 12 + 'px',
+    height: bx[3] - bx[1] + 8 + 'px', borderWidth: `${clamp(4 / s, 3, 10)}px` });
+  $('srcWrap').style.opacity = ease(t / 0.6) * (i === items.length - 1 ? out : 1);
   $('count').innerHTML = `QUESTION <b>${i + 1}</b> / ${items.length}`;
   $('head').style.opacity = ease(t / 0.5);
+  sweep($('sw'), lt / 0.9);
+  embers($('emb'), t, 40, 0.6);
   grain($('grain'), t);
 };
 </script></body></html>

@@ -11,3 +11,6 @@ html, body { margin: 0; background: #000; }
 .grain { mix-blend-mode: overlay; opacity: .08; }
 .kicker { font: 34px Bebas; letter-spacing: 12px; color: var(--orange); }
 .mono { font-family: JBMono, monospace; }
+.embers { pointer-events: none; }
+.sweep { position: absolute; top: -10%; height: 120%; width: 420px; left: 0; pointer-events: none; mix-blend-mode: screen;
+         background: linear-gradient(90deg, transparent, rgba(255,150,60,.10) 30%, rgba(255,214,160,.35) 50%, rgba(255,150,60,.10) 70%, transparent); }

@@ -4,7 +4,7 @@
 <style>
   #head { position: absolute; left: 80px; top: 48px; display: flex; align-items: baseline; gap: 28px; }
   #head h1 { margin: 0; font: 64px Anton; letter-spacing: 3px; text-transform: uppercase; }
-  #view { position: absolute; left: 80px; top: 150px; width: 900px; height: 870px; overflow: hidden; border-radius: 14px;
+  #view { position: absolute; left: 80px; top: 140px; width: 900px; height: 870px; overflow: hidden; border-radius: 14px;
           background: #111; box-shadow: 0 0 0 2px rgba(255,122,26,.35), 0 30px 80px rgba(0,0,0,.6); }
   #cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
   #cam img { display: block; }
@@ -20,21 +20,30 @@
   .v { opacity: 0; } .ln.on .v { opacity: 1; }
   .ln.on .num { color: #8fd3ff; } .ln.on .str { color: #b6f09c; } .ln.on .nul { color: #ff8b8b; }
   .sub { font-size: 20px; }
+  #scan { position: absolute; left: 0; right: 0; height: 4px; background: #ffd9a8;
+          box-shadow: 0 0 18px 6px rgba(255,122,26,.8), 0 -60px 80px rgba(255,122,26,.25); }
+  .det { position: absolute; border: 6px solid rgba(143,211,255,.95); background: rgba(143,211,255,.22); border-radius: 6px; box-shadow: 0 0 24px rgba(143,211,255,.8); }
+  #phase { position: absolute; left: 84px; top: 1030px; font: 30px Bebas; letter-spacing: 10px; color: var(--amber); }
+  #wire { position: absolute; inset: 0; pointer-events: none; }
   #tag { position: absolute; right: 80px; top: 64px; font: 30px Bebas; letter-spacing: 8px; color: var(--dim); }
 </style></head>
 <body><div id="stage">
   <div class="layer glow"></div>
   <div id="head"><span class="kicker">LEVEL 1</span><h1>Bill → JSON</h1></div>
   <div id="tag"></div>
-  <div id="view"><div id="cam"><img id="bill"><div id="box"></div></div></div>
+  <div id="view"><div id="cam"><img id="bill"><div id="dets"></div><div id="box"></div></div><div id="scan"></div></div>
+  <div id="phase"></div>
   <div id="json"><div id="jin"></div></div>
+  <svg id="wire" width="1920" height="1080"><defs><linearGradient id="wg" x1="0" x2="1"><stop offset="0" stop-color="#ff7a1a"/><stop offset="1" stop-color="#ffd29a"/></linearGradient></defs>
+    <path id="wpath" fill="none" stroke="url(#wg)" stroke-width="3" style="filter: drop-shadow(0 0 6px #ff7a1a)"/><circle id="wdot" r="7" fill="#ffd29a"/></svg>
+  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
   <div class="layer vignette"></div>
   <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
 </div>
 <script src="common.js"></script>
 <script>
 // Data-driven: data/level1.json (the CLI's real output) + data/boxes.json (where each field sits on the bill).
-const STEP = 0.72, LEAD = 0.9, VW = 900, VH = 870;
+const STEP = 0.72, LEAD = 2.6, VW = 900, VH = 870;
 const BILL = params.get('bill') || 'KESC_0008';
 let steps = [], boxes = {}, lines = [], IW = 1446, IH = 2046;
 const fmt = v => v === null ? `<span class="nul">null</span>` : typeof v === 'number' ? `<span class="num">${v}</span>` : `<span class="str">"${v}"</span>`;
@@ -54,6 +63,8 @@ window.assetsReady = Promise.all([loadJSON('data/level1.json'), loadJSON('data/b
       html += `<div class="ln" data-s="${idx}">  <span class="v">],</span></div>`;
     } else html += `<div class="ln" data-s="${idx}">  <span class="k">"${k}"</span>: <span class="v">${fmt(v)},</span></div>`;
   }
+  $('dets').innerHTML = Object.entries(boxes).filter(([k]) => !k.startsWith('_')).map(([k, b]) =>
+    `<div class="det" data-y="${b[1]}" style="left:${b[0]}px;top:${b[1]}px;width:${b[2]-b[0]}px;height:${b[3]-b[1]}px"></div>`).join('');
   $('jin').innerHTML = html + '<div class="ln on">}</div>';
   lines = [...$('jin').querySelectorAll('.ln[data-s]')];
   window.DUR = LEAD + steps.length * STEP + 1.6;
@@ -89,6 +100,33 @@ window.render = t => {
   const want = end ? maxScroll : tgt ? clamp(tgt.offsetTop - 818 * 0.6, 0, maxScroll) : 0;
   window._scroll = window._scroll === undefined ? want : lerp(window._scroll, want, 0.18);
   $('jin').style.transform = `translateY(${-window._scroll}px)`;
+  // Scan phase: beam sweeps the whole bill, fields light up as it passes
+  const sk = (t - 0.4) / 1.7, beamY = lerp(-10, VH + 10, easeIO(sk));
+  $('scan').style.top = beamY + 'px'; $('scan').style.opacity = sk > 0 && sk < 1 ? 1 : 0;
+  for (const d of $('dets').children) {
+    const yStage = VH / 2 + (Number(d.dataset.y) - cx) * 0 + (Number(d.dataset.y) - cy) * s;
+    const seen = sk > 0 && beamY > yStage, fadeOut = 1 - clamp((t - 2.3) / 0.4);
+    d.style.opacity = seen ? (0.6 + 0.4 * Math.sin(t * 40 + Number(d.dataset.y))) * fadeOut : 0;
+  }
+  $('phase').textContent = t < 2.3 ? 'SCANNING BILL…' : end ? '✓ ALL FIELDS EXTRACTED' : `EXTRACTING  ${Math.min(k + 1, steps.length)} / ${steps.length}`;
+  $('phase').style.opacity = ease((t - 0.3) / 0.3);
+  // Wire from the highlighted box to its JSON line
+  const wk = ease((f - 0.4) / 0.25);
+  const head = lines.find(l => Number(l.dataset.s) === k);
+  if (bx && head && !end && wk > 0) {
+    const x1 = 80 + VW / 2 + (bx[2] + 5 - cx) * s, y1 = 140 + VH / 2 + ((bx[1] + bx[3]) / 2 - cy) * s;
+    const x2 = 1040 + 22, y2 = 150 + 26 + head.offsetTop - window._scroll + 15;
+    const ax = Math.min(x1, 975), d = `M ${ax} ${y1} C ${ax + 60} ${y1}, ${x2 - 60} ${y2}, ${x2} ${y2}`;
+    $('wpath').setAttribute('d', d); const L = $('wpath').getTotalLength();
+    $('wpath').style.strokeDasharray = L; $('wpath').style.strokeDashoffset = L * (1 - wk);
+    const p = $('wpath').getPointAtLength(L * wk); $('wdot').setAttribute('cx', p.x); $('wdot').setAttribute('cy', p.y);
+    $('wire').style.opacity = 1 - clamp((f - 0.9) / 0.1);
+  } else $('wire').style.opacity = 0;
+  // Value pop on the active line
+  for (const el of lines) { const v = el.querySelector('.v'); if (!v) continue;
+    const live = el.classList.contains('act'); const pk = live ? ease((f - 0.45) / 0.2) : 1;
+    v.style.display = 'inline-block'; v.style.transform = `translateX(${lerp(24, 0, pk)}px)`; v.style.filter = live && pk < 1 ? `blur(${(1 - pk) * 4}px)` : 'none'; }
+  embers($('emb'), t, 40, 0.6);
   $('head').style.opacity = ease(t / 0.5);
   $('stage').style.opacity = 1 - clamp((t - window.DUR + 0.4) / 0.4);
   grain($('grain'), t);

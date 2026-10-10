@@ -18,3 +18,24 @@ function loadImages(srcs) {
     .then(() => document.fonts.ready);
 }
 async function loadJSON(path) { return (await fetch(path)).json(); }
+
+// Floating embers: deterministic per t, drawn on a full-size canvas.
+function embers(canvas, t, n = 70, alpha = 1) {
+  const g = canvas.getContext('2d'); const W = canvas.width, H = canvas.height;
+  g.clearRect(0, 0, W, H); g.globalCompositeOperation = 'lighter';
+  let s = 12345; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const x0 = r() * W, y0 = r() * H, sp = 30 + r() * 90, sz = 1 + r() * 3.2, ph = r() * 6.28, fl = 2 + r() * 4;
+    const y = ((y0 - t * sp) % H + H) % H, x = x0 + Math.sin(t * 0.8 + ph) * 30;
+    const a = alpha * (0.35 + 0.65 * Math.abs(Math.sin(t * fl + ph))) * Math.min(1, y / (H * 0.25));
+    const gr = g.createRadialGradient(x, y, 0, x, y, sz * 5);
+    gr.addColorStop(0, `rgba(255,190,110,${a})`); gr.addColorStop(0.35, `rgba(255,122,26,${a * 0.5})`); gr.addColorStop(1, 'rgba(255,80,20,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, sz * 5, 0, 6.29); g.fill();
+  }
+  g.globalCompositeOperation = 'source-over';
+}
+// Diagonal light sweep: call with local time k in [0,1] to drive an element with class "sweep".
+function sweep(el, k) {
+  el.style.opacity = k > 0 && k < 1 ? 1 : 0;
+  el.style.transform = `translateX(${lerp(-1400, 2600, easeIO(k))}px) skewX(-20deg)`;
+}

@@ -11,10 +11,13 @@
   #name { font: 110px Anton; letter-spacing: 6px; text-transform: uppercase; color: var(--cream); }
   #rule { height: 3px; width: 0; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin: 18px 0 24px; }
   #by { font: 40px Bebas; letter-spacing: 12px; color: var(--amber); }
+  .rib { position: absolute; top: -10%; height: 120%; mix-blend-mode: screen; border-radius: 40%; }
   #meta { font: 500 26px JBMono, monospace; color: var(--dim); margin-top: 26px; }
 </style></head>
 <body><div id="stage">
   <div class="layer glow"></div>
+  <div id="ribs" class="layer"></div>
+  <canvas id="emb" class="layer embers" width="1920" height="1080"></canvas>
   <div id="wrap" class="layer">
     <div id="stats"></div>
     <div id="name"></div><div id="rule"></div>
@@ -25,7 +28,12 @@
 </div>
 <script src="common.js"></script>
 <script>
-window.DUR = 5;
+window.DUR = 5.5;
+const ribs = []; { let sd = 5; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const pal = ['#ff7a1a', '#e8401c', '#ffb340', '#ffd29a'];
+  for (let i = 0; i < 34; i++) { const el = document.createElement('div'); el.className = 'rib'; const c = pal[i % 4];
+    el.style.background = `linear-gradient(180deg, transparent, ${c} 30%, ${c} 70%, transparent)`; el.style.boxShadow = `0 0 30px ${c}`;
+    document.getElementById('ribs').appendChild(el); ribs.push({ el, x: r(), w: 3 + Math.pow(r(), 2) * 40 }); } }
 let stats = [];
 window.assetsReady = loadJSON('data/project.json').then(p => {
   $('stats').innerHTML = p.stats.map(s => `<div class="stat"><div class="v" data-v="${s.value}">0</div><div class="l">${s.label}</div></div>`).join('');
@@ -35,17 +43,23 @@ window.assetsReady = loadJSON('data/project.json').then(p => {
   return document.fonts.ready;
 }).then(() => render(0));
 window.render = t => {
+  // Ribbon callback to the intro: streaks burst from the center and sweep out
+  const rk = clamp(t / 1.1);
+  for (const r of ribs) { r.el.style.left = `${lerp(960, r.x * 1920, ease(rk * 1.4)) - r.w / 2}px`; r.el.style.width = `${r.w}px`;
+    r.el.style.opacity = rk < 1 ? Math.sin(rk * Math.PI) : 0; r.el.style.transform = `scaleY(${lerp(0.1, 1, ease(rk * 2))})`; }
+  $('ribs').style.transform = `scale(${lerp(1, 2.4, easeIn(rk))})`;
+  embers($('emb'), t + 7, 80, ease((t - 0.6) / 0.8));
   stats.forEach((el, i) => {
-    const k = ease((t - 0.2 - i * 0.25) / 0.9), v = el.querySelector('.v'), target = Number(v.dataset.v);
+    const k = ease((t - 0.7 - i * 0.25) / 0.9), v = el.querySelector('.v'), target = Number(v.dataset.v);
     v.textContent = isNaN(target) ? v.dataset.v : Math.round(target * k);
-    el.style.opacity = ease((t - 0.2 - i * 0.25) / 0.4);
+    el.style.opacity = ease((t - 0.7 - i * 0.25) / 0.4);
     el.style.transform = `translateY(${lerp(40, 0, k)}px)`;
   });
-  $('name').style.opacity = ease((t - 1.5) / 0.5);
-  $('name').style.letterSpacing = `${lerp(30, 6, ease((t - 1.5) / 1.2))}px`;
-  $('rule').style.width = `${900 * ease((t - 1.8) / 0.8)}px`;
-  $('by').style.opacity = ease((t - 2.1) / 0.5); $('meta').style.opacity = ease((t - 2.4) / 0.5);
-  $('stage').style.opacity = 1 - clamp((t - 4.4) / 0.6);
+  $('name').style.opacity = ease((t - 2.0) / 0.5);
+  $('name').style.letterSpacing = `${lerp(30, 6, ease((t - 2.0) / 1.2))}px`;
+  $('rule').style.width = `${900 * ease((t - 2.3) / 0.8)}px`;
+  $('by').style.opacity = ease((t - 2.6) / 0.5); $('meta').style.opacity = ease((t - 2.9) / 0.5);
+  $('stage').style.opacity = 1 - clamp((t - 4.9) / 0.6);
   grain($('grain'), t);
 };
 </script></body></html>

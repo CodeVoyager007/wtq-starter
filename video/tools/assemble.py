@@ -51,7 +51,8 @@ def clip(s, idx):
     out = f'{SEG}/{key}.mp4'
     ff(*trim, '-i', src, '-loop', '1', '-i', f'{fr}/f00000.png', '-filter_complex',
        f'[0:v]setpts=PTS/{spd},fps={FPS},scale=1536:864:force_original_aspect_ratio=decrease,pad=1536:864:(ow-iw)/2:(oh-ih)/2:color=0x0f0d0b[v];'
-       f'color=c=black:s=1920x1080:r={FPS}[bg];[bg][v]overlay=192:100:shortest=1[b];[b][1:v]overlay=0:0:shortest=1,format=yuv420p',
+       f'color=c=black:s=1920x1080:r={FPS}[bg];[bg][v]overlay=192:100:shortest=1[b];[b][1:v]overlay=0:0:shortest=1,'
+       f"scale=w='trunc(1920*(1+0.07*pow(max(0,1-t/0.9),2))/2)*2':h=-2:eval=frame,crop=1920:1080,format=yuv420p",
        '-an', '-c:v', 'libx264', '-crf', '16', '-preset', 'fast', out)
     return out
 
@@ -69,12 +70,35 @@ total = t
 print(f'TOTAL {total:.1f}s')
 if total > MAX_SEC: sys.exit(f'ERROR: {total:.1f}s is over the 3 minute limit. Trim clips (from/to) or raise speed.')
 
-with open(f'{B}/concat.txt', 'w') as fh: fh.writelines(f"file '{os.path.abspath(p)}'\n" for p in parts)
-ff('-f', 'concat', '-safe', '0', '-i', f'{B}/concat.txt', '-c', 'copy', f'{B}/video_only.mp4')
+# Transitions between segments (xfade); per-segment "transition" in timeline.json overrides the default.
+def pick(prev, nxt):
+    if nxt == 'outro': return 'fadeblack', 0.6
+    if prev == 'intro': return 'fade', 0.6
+    if nxt == 'chapter': return ('fadewhite', 0.4) if prev == 'slide' else ('radial', 0.5)
+    if prev == 'chapter': return 'circleopen', 0.6
+    if nxt == 'slide': return 'smoothleft', 0.6
+    return 'fade', 0.4
+segs = tl['segments']; trans = []
+for i in range(1, len(parts)):
+    name, T = pick(segs[i - 1]['type'], segs[i]['type'])
+    trans.append((segs[i].get('transition', name), float(segs[i].get('transition_sec', T))))
+ins, fc, off, cur = [], [], 0.0, '[v0]'
+for i, p in enumerate(parts):
+    ins += ['-i', p]; fc.append(f'[{i}:v]fps={FPS},format=yuv420p,settb=AVTB,setsar=1[v{i}]')
+new_starts = [0.0]
+for i in range(1, len(parts)):
+    name, T = trans[i - 1]
+    off += starts[i - 1][2] - T
+    fc.append(f'{cur}[v{i}]xfade=transition={name}:duration={T}:offset={off:.3f}[x{i}]'); cur = f'[x{i}]'
+    new_starts.append(off)
+total = off + starts[-1][2]
+starts = [(ty, ns, d) for (ty, _, d), ns in zip(starts, new_starts)]
+ff(*ins, '-filter_complex', ';'.join(fc), '-map', cur, '-c:v', 'libx264', '-crf', '16', '-preset', 'fast', f'{B}/video_only.mp4')
+print(f'TOTAL with transitions {total:.1f}s')
 
 intro_end = next((st + d for ty, st, d in starts if ty == 'intro'), 0)
-cues = {'duration': total, 'drop': intro_end,
-        'hits': [st for ty, st, d in starts if ty == 'chapter' and st > intro_end + 0.1],
+cues = {'duration': total, 'drop': intro_end - 0.6,
+        'hits': [st + 0.25 for ty, st, d in starts if ty == 'chapter' and st > 1],
         'outro': next((st for ty, st, d in starts if ty == 'outro'), total - 4)}
 json.dump(cues, open(f'{B}/cues.json', 'w'))
 sh('python3', 'tools/music.py', f'{B}/cues.json', f'{B}/music.wav')

@@ -5,17 +5,35 @@
     {
       "q": "How much of my bill is taxes?",
       "calc": "569.62 ÷ 3,430.24 = 16.6%",
-      "a": "Taxes and duties total PKR 569.62 out of your current bill of PKR 3,430.24, or about 16.6%. Tax lines: sales tax PKR 520.21, electricity duty PKR 29.41, MUCT (KMC) PKR 20.00."
+      "a": "Taxes and duties total PKR 569.62 out of your current bill of PKR 3,430.24, or about 16.6%. Tax lines: sales tax PKR 520.21, electricity duty PKR 29.41, MUCT (KMC) PKR 20.00.",
+      "source": [
+        762,
+        911,
+        1408,
+        990
+      ]
     },
     {
       "q": "How many months in my history went above 200 units?",
       "calc": "count(history > 200) = 2",
-      "a": "Two of the 12 previous months exceeded 200 units: July 2025 (239) and August 2025 (203). The current month used 151 units, so the count is two either way."
+      "a": "Two of the 12 previous months exceeded 200 units: July 2025 (239) and August 2025 (203). The current month used 151 units, so the count is two either way.",
+      "source": [
+        31,
+        918,
+        719,
+        1076
+      ]
     },
     {
       "q": "What happens if I pay late?",
       "calc": "5% LPS = 143.03 → 3,574  ·  10% LPS = 286.06 → 3,716",
-      "a": "Pay by 21 Apr 2026: PKR 3,430. Between 22 and 24 Apr a 5% surcharge applies, so PKR 3,574. After 24 Apr a 10% surcharge applies, so PKR 3,716, which is PKR 286 more than paying on time."
+      "a": "Pay by 21 Apr 2026: PKR 3,430. Between 22 and 24 Apr a 5% surcharge applies, so PKR 3,574. After 24 Apr a 10% surcharge applies, so PKR 3,716, which is PKR 286 more than paying on time.",
+      "source": [
+        762,
+        1108,
+        1408,
+        1208
+      ]
     }
   ]
 }
