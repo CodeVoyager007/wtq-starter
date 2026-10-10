@@ -1,0 +1,13 @@
+@font-face { font-family: Anton; src: url(../assets/fonts/Anton.woff2); }
+@font-face { font-family: Bebas; src: url(../assets/fonts/BebasNeue.woff2); }
+@font-face { font-family: JBMono; src: url(../assets/fonts/JetBrainsMono.woff2); font-weight: 100 900; }
+:root { --orange: #ff7a1a; --ember: #e8401c; --amber: #ffb340; --cream: #f4e9dc; --ink: #050505; --dim: #8a7f74; }
+html, body { margin: 0; background: #000; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); color: var(--cream);
+         font-family: Bebas, sans-serif; }
+.layer { position: absolute; inset: 0; }
+.glow { background: radial-gradient(ellipse at 50% 120%, rgba(255,122,26,.22), transparent 60%); }
+.vignette { background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.8) 100%); pointer-events: none; }
+.grain { mix-blend-mode: overlay; opacity: .08; }
+.kicker { font: 34px Bebas; letter-spacing: 12px; color: var(--orange); }
+.mono { font-family: JBMono, monospace; }

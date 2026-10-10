@@ -1,0 +1,18 @@
+{
+  "_note": "Edit this to arrange the video. Clips live in raw/. A missing clip renders as a placeholder so the cut can be previewed.",
+  "target_mb": 8,
+  "segments": [
+    { "type": "intro" },
+    { "type": "chapter", "i": 0 },
+    { "type": "clip", "file": "raw/01_launch.mp4", "num": "01", "cap": "Run it from the terminal" },
+    { "type": "chapter", "i": 1 },
+    { "type": "clip", "file": "raw/02_extract.mp4", "num": "02", "cap": "Level 1 · the bill goes in, JSON comes out" },
+    { "type": "slide", "page": "decode.html" },
+    { "type": "chapter", "i": 2 },
+    { "type": "clip", "file": "raw/03_ask.mp4", "num": "03", "cap": "Level 2 · questions about the same bill" },
+    { "type": "slide", "page": "answers.html" },
+    { "type": "chapter", "i": 3 },
+    { "type": "clip", "file": "raw/04_batch.mp4", "num": "04", "cap": "Batch run · 10 test bills → level1.csv + level2.csv", "speed": 1 },
+    { "type": "outro" }
+  ]
+}

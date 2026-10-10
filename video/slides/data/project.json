@@ -1,0 +1,43 @@
+{
+  "name": "Bill Decoder",
+  "tagline": "Read it. Extract it. Explain it.",
+  "author": "Ayesha Mughal",
+  "event": "Women Tech Quest 2026 · Build Track",
+  "model": "gemini-3.5-flash-lite",
+  "stats": [
+    {
+      "value": "10",
+      "label": "Test bills decoded"
+    },
+    {
+      "value": "120",
+      "label": "Questions answered"
+    },
+    {
+      "value": "3",
+      "label": "Providers covered"
+    }
+  ],
+  "chapters": [
+    {
+      "num": "01",
+      "title": "Launch",
+      "sub": "Run it from the terminal"
+    },
+    {
+      "num": "02",
+      "title": "Extract",
+      "sub": "Level 1 · Bill to JSON"
+    },
+    {
+      "num": "03",
+      "title": "Explain",
+      "sub": "Level 2 · Questions answered"
+    },
+    {
+      "num": "04",
+      "title": "Batch Run",
+      "sub": "10 test bills → level1.csv + level2.csv"
+    }
+  ]
+}

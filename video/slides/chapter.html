@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Chapter Card</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #wrap { display: flex; align-items: center; padding-left: 220px; gap: 70px; }
+  #num { font: 420px/0.8 Anton; color: transparent; -webkit-text-stroke: 4px var(--orange); position: relative; }
+  #numFill { position: absolute; inset: 0; color: var(--orange); -webkit-text-stroke: 0; clip-path: inset(100% 0 0 0); }
+  #txt { display: flex; flex-direction: column; gap: 10px; }
+  #title { font: 200px/0.9 Anton; text-transform: uppercase; letter-spacing: 4px; color: var(--cream); }
+  #sub { font: 52px Bebas; letter-spacing: 10px; color: var(--amber); }
+  #bar { position: absolute; left: 220px; bottom: 220px; height: 6px; background: linear-gradient(90deg, var(--ember), var(--orange)); box-shadow: 0 0 24px var(--orange); }
+  #streak { position: absolute; top: 0; bottom: 0; width: 260px; background: linear-gradient(90deg, transparent, rgba(255,179,64,.35), transparent); mix-blend-mode: screen; }
+</style></head>
+<body><div id="stage">
+  <div class="layer glow"></div>
+  <div id="wrap" class="layer">
+    <div id="num"><span id="n"></span><span id="numFill"></span></div>
+    <div id="txt"><div class="kicker" id="kick">CHAPTER</div><div id="title"></div><div id="sub"></div></div>
+  </div>
+  <div id="bar"></div><div id="streak"></div>
+  <div class="layer vignette"></div>
+  <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
+</div>
+<script src="common.js"></script>
+<script>
+window.DUR = 2.6;
+window.assetsReady = loadJSON('data/project.json').then(p => {
+  const c = p.chapters[Number(params.get('i') || 0)];
+  $('n').textContent = c.num; $('numFill').textContent = c.num; $('title').textContent = c.title; $('sub').textContent = c.sub;
+  return document.fonts.ready;
+}).then(() => render(0));
+window.render = t => {
+  const out = 1 - clamp((t - 2.2) / 0.4);
+  $('num').style.transform = `translateX(${lerp(-80, 0, ease(t / 0.6))}px) scale(${lerp(1.15, 1, ease(t / 0.6))})`;
+  $('num').style.opacity = ease(t / 0.3) * out;
+  $('numFill').style.clipPath = `inset(${100 - 100 * easeIO((t - 0.25) / 0.7)}% 0 0 0)`;
+  $('title').style.transform = `translateY(${lerp(60, 0, ease((t - 0.15) / 0.6))}px)`;
+  $('title').style.opacity = ease((t - 0.15) / 0.4) * out;
+  $('sub').style.opacity = ease((t - 0.45) / 0.4) * out; $('kick').style.opacity = ease((t - 0.35) / 0.4) * out;
+  $('sub').style.letterSpacing = `${lerp(24, 10, ease((t - 0.45) / 1))}px`;
+  $('bar').style.width = `${1480 * easeIO(t / 2.2)}px`; $('bar').style.opacity = out;
+  $('streak').style.left = `${lerp(-300, 2100, easeIO((t - 0.1) / 0.9))}px`;
+  grain($('grain'), t);
+};
+</script></body></html>

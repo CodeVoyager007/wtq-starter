@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Outro Card</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #stats { display: flex; gap: 120px; margin-bottom: 70px; }
+  .stat { text-align: center; }
+  .stat .v { font: 190px/0.9 Anton; background: linear-gradient(180deg, #ffd29a, var(--orange) 55%, var(--ember));
+             -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 24px rgba(255,122,26,.45)); }
+  .stat .l { font: 34px Bebas; letter-spacing: 8px; color: var(--cream); margin-top: 14px; max-width: 420px; }
+  #name { font: 110px Anton; letter-spacing: 6px; text-transform: uppercase; color: var(--cream); }
+  #rule { height: 3px; width: 0; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin: 18px 0 24px; }
+  #by { font: 40px Bebas; letter-spacing: 12px; color: var(--amber); }
+  #meta { font: 500 26px JBMono, monospace; color: var(--dim); margin-top: 26px; }
+</style></head>
+<body><div id="stage">
+  <div class="layer glow"></div>
+  <div id="wrap" class="layer">
+    <div id="stats"></div>
+    <div id="name"></div><div id="rule"></div>
+    <div id="by"></div><div id="meta"></div>
+  </div>
+  <div class="layer vignette"></div>
+  <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
+</div>
+<script src="common.js"></script>
+<script>
+window.DUR = 5;
+let stats = [];
+window.assetsReady = loadJSON('data/project.json').then(p => {
+  $('stats').innerHTML = p.stats.map(s => `<div class="stat"><div class="v" data-v="${s.value}">0</div><div class="l">${s.label}</div></div>`).join('');
+  stats = [...document.querySelectorAll('.stat')];
+  $('name').textContent = p.name; $('by').textContent = `${p.author} · ${p.event}`;
+  $('meta').textContent = `model: ${p.model}`;
+  return document.fonts.ready;
+}).then(() => render(0));
+window.render = t => {
+  stats.forEach((el, i) => {
+    const k = ease((t - 0.2 - i * 0.25) / 0.9), v = el.querySelector('.v'), target = Number(v.dataset.v);
+    v.textContent = isNaN(target) ? v.dataset.v : Math.round(target * k);
+    el.style.opacity = ease((t - 0.2 - i * 0.25) / 0.4);
+    el.style.transform = `translateY(${lerp(40, 0, k)}px)`;
+  });
+  $('name').style.opacity = ease((t - 1.5) / 0.5);
+  $('name').style.letterSpacing = `${lerp(30, 6, ease((t - 1.5) / 1.2))}px`;
+  $('rule').style.width = `${900 * ease((t - 1.8) / 0.8)}px`;
+  $('by').style.opacity = ease((t - 2.1) / 0.5); $('meta').style.opacity = ease((t - 2.4) / 0.5);
+  $('stage').style.opacity = 1 - clamp((t - 4.4) / 0.6);
+  grain($('grain'), t);
+};
+</script></body></html>

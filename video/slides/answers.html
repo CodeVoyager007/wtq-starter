@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Answers Sequence</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #head { position: absolute; left: 120px; top: 70px; display: flex; align-items: baseline; gap: 28px; }
+  #head h1 { margin: 0; font: 64px Anton; letter-spacing: 3px; text-transform: uppercase; }
+  #count { position: absolute; right: 120px; top: 82px; font: 40px Bebas; letter-spacing: 8px; color: var(--dim); }
+  #count b { color: var(--orange); font-weight: normal; }
+  #card { position: absolute; left: 120px; right: 120px; top: 200px; }
+  #q { font: 76px/1.05 Anton; color: var(--cream); text-transform: none; max-width: 1500px; }
+  #q::before { content: 'Q'; display: inline-block; font: 76px Anton; color: var(--ink); background: var(--orange);
+               width: 92px; text-align: center; margin-right: 30px; border-radius: 8px; }
+  #calc { display: inline-flex; gap: 18px; align-items: center; margin-top: 48px; padding: 16px 28px; border-radius: 10px;
+          background: #0c0a09; box-shadow: inset 0 0 0 2px rgba(255,122,26,.45), 0 0 40px rgba(255,122,26,.15);
+          font: 600 34px JBMono, monospace; color: #8fd3ff; }
+  #calc span { font: 26px Bebas; letter-spacing: 6px; color: var(--amber); }
+  #a { margin-top: 48px; font: 500 40px/1.5 JBMono, monospace; color: var(--cream); max-width: 1640px;
+       border-left: 6px solid var(--orange); padding-left: 34px; min-height: 240px; }
+  #a .cur { display: inline-block; width: 18px; height: 40px; background: var(--orange); vertical-align: -6px; margin-left: 4px; }
+  #grounded { margin-top: 30px; font: 30px Bebas; letter-spacing: 8px; color: #7ad87a; }
+</style></head>
+<body><div id="stage">
+  <div class="layer glow"></div>
+  <div id="head"><span class="kicker">LEVEL 2</span><h1>Ask the bill</h1></div>
+  <div id="count"></div>
+  <div id="card">
+    <div id="q"></div>
+    <div id="calc"><span>COMPUTED</span><div id="calcTxt"></div></div>
+    <div id="a"></div>
+    <div id="grounded"></div>
+  </div>
+  <div class="layer vignette"></div>
+  <canvas id="grain" class="layer grain" width="480" height="270"></canvas>
+</div>
+<script src="common.js"></script>
+<script>
+// Data-driven: data/level2.json items {q, calc, a}. Each item gets its own timed slot.
+const CPS = 55; let items = [], slots = [];
+window.DUR = 20;
+window.assetsReady = loadJSON('data/level2.json').then(d => {
+  items = d.items; $('grounded').textContent = d.badge || '✓ Grounded in the bill'; let t = 0;
+  for (const it of items) { const len = 1.6 + it.a.length / CPS + 2.2; slots.push({ s: t, len }); t += len; }
+  window.DUR = t; return document.fonts.ready;
+}).then(() => render(0));
+window.render = t => {
+  let i = slots.findIndex(s => t >= s.s && t < s.s + s.len); if (i < 0) i = items.length - 1;
+  const it = items[i], lt = t - slots[i].s, len = slots[i].len;
+  const fade = ease(lt / 0.35) * (1 - clamp((lt - len + 0.35) / 0.35));
+  $('card').style.opacity = fade;
+  $('card').style.transform = `translateY(${lerp(30, 0, ease(lt / 0.5))}px)`;
+  $('q').textContent = it.q;
+  $('calcTxt').textContent = it.calc;
+  $('calc').style.opacity = ease((lt - 0.7) / 0.3);
+  $('calc').style.transform = `scale(${lerp(0.92, 1, ease((lt - 0.7) / 0.3))})`;
+  const n = Math.floor(clamp((lt - 1.4) * CPS, 0, it.a.length));
+  const typing = n < it.a.length && lt > 1.4;
+  $('a').innerHTML = it.a.slice(0, n).replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+    (typing || Math.floor(lt * 2) % 2 ? '<span class="cur"></span>' : '');
+  $('grounded').style.opacity = ease((lt - 1.4 - it.a.length / CPS - 0.1) / 0.4);
+  $('count').innerHTML = `QUESTION <b>${i + 1}</b> / ${items.length}`;
+  $('head').style.opacity = ease(t / 0.5);
+  grain($('grain'), t);
+};
+</script></body></html>
