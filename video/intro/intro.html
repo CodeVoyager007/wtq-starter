@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bill Decoder Intro</title>
+<style>
+  @font-face { font-family: Anton; src: url(../assets/fonts/Anton.woff2); }
+  @font-face { font-family: Bebas; src: url(../assets/fonts/BebasNeue.woff2); }
+  @font-face { font-family: JBMono; src: url(../assets/fonts/JetBrainsMono.woff2); font-weight: 100 900; }
+  :root { --orange: #ff7a1a; --ember: #e8401c; --amber: #ffb340; --ink: #050505; }
+  html, body { margin: 0; background: #000; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); }
+  .layer { position: absolute; inset: 0; }
+  #panel { background-size: cover; background-position: center; will-change: transform; }
+  #tint { mix-blend-mode: multiply; }
+  #json { display: flex; align-items: center; justify-content: center;
+          font: 700 92px JBMono, monospace; color: #fff; letter-spacing: -1px;
+          text-shadow: 0 0 30px rgba(255,122,26,.9), 0 0 4px #000; white-space: pre; }
+  #json .k { color: var(--amber); }
+  #json .pill { background: rgba(5,5,5,.86); padding: 18px 40px; border-left: 10px solid var(--orange); box-shadow: 0 20px 60px rgba(0,0,0,.6); position: absolute; bottom: 150px; font-size: 64px; }
+  #ribbons { perspective: 900px; }
+  .rib { position: absolute; top: -10%; height: 120%; transform-origin: center; mix-blend-mode: screen; border-radius: 40%; }
+  #titleWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #title { font: 300px/0.9 Anton, Impact, sans-serif; letter-spacing: 6px; text-transform: uppercase;
+           background-size: cover; background-position: center;
+           -webkit-background-clip: text; background-clip: text; color: transparent; position: relative; }
+  #titleSolid { position: absolute; inset: 0; font: inherit; letter-spacing: inherit; color: transparent;
+           background: linear-gradient(180deg, #ffd29a 0%, var(--amber) 22%, var(--orange) 55%, var(--ember) 100%);
+           -webkit-background-clip: text; background-clip: text; }
+  #sub { font: 64px Bebas, sans-serif; letter-spacing: 22px; color: #f4e9dc; margin-top: 26px; padding-left: 22px; }
+  #rule { height: 3px; width: 0; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin-top: 18px; }
+  #flash { background: #fff; }
+  #vignette { background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.85) 100%); }
+  .bar { position: absolute; left: 0; right: 0; height: 120px; background: #000; z-index: 50; }
+  #grain { mix-blend-mode: overlay; opacity: .12; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="panel" class="layer"></div>
+  <div id="tint" class="layer"></div>
+  <div id="json" class="layer"></div>
+  <div id="ribbons" class="layer"></div>
+  <div id="titleWrap" class="layer">
+    <div id="title">Bill Decoder<span id="titleSolid">Bill Decoder</span></div>
+    <div id="rule"></div>
+    <div id="sub">Read it. Extract it. Explain it.</div>
+  </div>
+  <div id="flash" class="layer"></div>
+  <div id="vignette" class="layer"></div>
+  <canvas id="grain" class="layer" width="480" height="270"></canvas>
+  <div class="bar" id="barTop" style="top:0"></div>
+  <div class="bar" id="barBot" style="bottom:0"></div>
+</div>
+<script>
+// Deterministic timeline: window.render(t) draws the frame at time t (seconds).
+const DUR = 7.5;
+const C = '../assets/panels/';
+const crops = ['logo_raw','units_red','calc_orange','amount_due_raw','usage_red','due_date_amber','prev_dues_red','star_raw',
+               'history_orange','customer_info_red','header_used_raw','units_amber','calc_red','amount_due_orange','usage_raw',
+               'due_date_red','calc_bottom_amber','units_raw'];
+const jsonFlash = { 0: ['"provider"', '"KE"'], 1: ['"units_consumed"', '151'], 3: ['"payable_within_due_date"', '3430'],
+                    5: ['"due_date"', '"2026-04-21"'], 6: ['"arrears"', '-0.53'], 12: ['"total_taxes"', '569.62'] };
+
+// Accelerating flip schedule from 0.35s to 3.3s
+const flips = []; { let t = 0.35, d = 0.34;
+  for (let i = 0; i < crops.length; i++) { flips.push({ s: t, d, img: crops[i], i }); t += d; d = Math.max(0.075, d * 0.84); } }
+const FLIP_END = flips[flips.length - 1].s + flips[flips.length - 1].d;
+
+// Ribbons (light streaks)
+const ribbons = []; const ribEl = document.getElementById('ribbons');
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const palette = ['#ff7a1a', '#e8401c', '#ffb340', '#ff5a1f', '#ffd29a', '#c2271a'];
+for (let i = 0; i < 46; i++) {
+  const el = document.createElement('div'); el.className = 'rib';
+  const col = palette[i % palette.length];
+  el.style.background = `linear-gradient(180deg, transparent, ${col} 30%, ${col} 70%, transparent)`;
+  ribEl.appendChild(el);
+  ribbons.push({ el, x: rnd(), w: 3 + Math.pow(rnd(), 2.2) * 46, delay: rnd() * 0.5, glow: col });
+}
+
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeIn = x => Math.pow(clamp(x), 3);
+const lerp = (a, b, x) => a + (b - a) * x;
+
+$('title').style.backgroundImage = `url(${C}title_tex.jpg)`;
+
+function render(t) {
+  // Letterbox
+  const lb = t < 6.6 ? 1 : 1 - ease((t - 6.6) / 0.6);
+  $('barTop').style.transform = `translateY(${-120 * (1 - lb)}px)`;
+  $('barBot').style.transform = `translateY(${120 * (1 - lb)}px)`;
+
+  // Flip montage
+  const f = flips.find(p => t >= p.s && t < p.s + p.d);
+  const montageFade = t < FLIP_END ? 1 : 1 - clamp((t - FLIP_END) / 0.15);
+  if (f) {
+    const k = (t - f.s) / f.d;
+    const dir = f.i % 2 ? 1 : -1;
+    $('panel').style.backgroundImage = `url(${C}${f.img}.jpg)`;
+    $('panel').style.transform = `scale(${lerp(1.22, 1.05, ease(k))}) translateX(${dir * lerp(60, 0, ease(k))}px) rotate(${dir * lerp(1.2, 0, k)}deg)`;
+    $('panel').style.filter = `brightness(${lerp(1.7, 1, ease(k * 2.5))})`;
+    const j = jsonFlash[f.i];
+    $('json').innerHTML = j ? `<span class="pill"><span class="k">${j[0]}</span>: ${j[1]}</span>` : '';
+    $('json').style.transform = `scale(${lerp(1.15, 1, ease(k))})`;
+  } else { $('panel').style.backgroundImage = 'none'; $('json').innerHTML = ''; }
+  $('panel').style.opacity = montageFade * (t < 0.35 ? 0 : 1);
+  $('tint').style.opacity = 0;
+  $('json').style.opacity = montageFade;
+
+  // Ribbons: rush in, zoom through
+  const R0 = FLIP_END - 0.1, R1 = 4.75;
+  if (t > R0 && t < R1 + 0.3) {
+    const k = clamp((t - R0) / (R1 - R0));
+    ribEl.style.opacity = t < 4.55 ? 1 : 1 - clamp((t - 4.55) / 0.2);
+    ribEl.style.transform = `scale(${lerp(0.55, 4.2, easeIn(k))})`;
+    for (const r of ribbons) {
+      const kk = clamp((k - r.delay * 0.4) / 0.6);
+      const spread = lerp(0.5, r.x, ease(kk * 1.6));
+      r.el.style.left = `${spread * 1920 - r.w / 2}px`;
+      r.el.style.width = `${r.w}px`;
+      r.el.style.opacity = ease(kk * 3);
+      r.el.style.transform = `scaleY(${lerp(0.05, 1, ease(kk * 2))})`;
+      r.el.style.boxShadow = `0 0 ${20 + r.w}px ${r.glow}`;
+    }
+  } else ribEl.style.opacity = 0;
+
+  // Title slam at 4.75s
+  const T0 = 4.75;
+  if (t >= T0 - 0.15) {
+    const k = clamp((t - (T0 - 0.15)) / 0.15);
+    const shake = t > T0 && t < T0 + 0.35 ? Math.sin(t * 90) * 10 * (1 - (t - T0) / 0.35) : 0;
+    $('title').style.transform = `scale(${lerp(2.6, 1, easeIn(k))}) translate(${shake}px, ${shake * 0.4}px)`;
+    $('title').style.opacity = k;
+    $('title').style.backgroundPosition = `${50 + (t - T0) * 12}% ${30 + (t - T0) * 18}%`;
+    $('titleSolid').style.opacity = ease((t - T0 - 0.55) / 0.6);
+    $('title').style.filter = `drop-shadow(0 0 ${lerp(60, 18, ease((t - T0) / 1.2))}px rgba(255,122,26,.75))`;
+    $('rule').style.width = `${ease((t - T0 - 0.35) / 0.7) * 1100}px`;
+    $('sub').style.opacity = ease((t - T0 - 0.6) / 0.5);
+    $('sub').style.letterSpacing = `${lerp(40, 22, ease((t - T0 - 0.6) / 1.2))}px`;
+  } else { $('title').style.opacity = 0; $('rule').style.width = 0; $('sub').style.opacity = 0; }
+  $('titleWrap').style.opacity = t < 6.9 ? 1 : 1 - clamp((t - 6.9) / 0.6);
+
+  // White flash on slam
+  $('flash').style.opacity = t >= T0 && t < T0 + 0.25 ? 0.85 * (1 - (t - T0) / 0.25) : 0;
+
+  // Film grain
+  const g = $('grain').getContext('2d'); const img = g.createImageData(480, 270);
+  let s = Math.floor(t * 15) * 9973 + 1;
+  for (let i = 0; i < img.data.length; i += 4) { s = (s * 48271) % 2147483647; const v = s & 255; img.data[i] = img.data[i+1] = img.data[i+2] = v; img.data[i+3] = 255; }
+  g.putImageData(img, 0, 0);
+}
+window.DUR = DUR; window.render = render;
+window.assetsReady = Promise.all([...new Set(crops), 'title_tex'].map(n => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = C + n + '.jpg'; })))
+  .then(() => document.fonts.ready);
+render(0);
+</script>
+</body>
+</html>
