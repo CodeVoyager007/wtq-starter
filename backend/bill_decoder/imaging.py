@@ -9,10 +9,17 @@ from PIL import ImageFilter, ImageOps
 
 from .llm import Image
 
+# Refuse absurd images instead of exhausting memory (decompression bombs).
+PILImage.MAX_IMAGE_PIXELS = 40_000_000
+
 MAX_SIDE = 2400
 MIN_SIDE = 2000  # small photos are upscaled so each digit gets more pixels
 MAX_UPSCALE = 3.0
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+
+
+class ImageError(ValueError):
+    pass
 
 
 def load(path: Path) -> Image:
@@ -20,6 +27,13 @@ def load(path: Path) -> Image:
 
 
 def load_bytes(data: bytes) -> Image:
+    try:
+        return _prepare(data)
+    except (OSError, ValueError, PILImage.DecompressionBombError) as exc:
+        raise ImageError("Could not read that image. Use a .png, .jpg or .webp photo of the bill.") from exc
+
+
+def _prepare(data: bytes) -> Image:
     with PILImage.open(io.BytesIO(data)) as img:
         img = ImageOps.exif_transpose(img).convert("RGB")
         long_side = max(img.size)

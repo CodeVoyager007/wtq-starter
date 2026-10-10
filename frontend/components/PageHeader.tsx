@@ -1,6 +1,6 @@
 import Photo, { type Pic } from "./Photo";
 
-/** Dark photo banner with a title. Used at the top of the Workspace and How it works pages. */
+/** Dark photo banner with a title. Used at the top of the Decode a bill and How it works pages. */
 export default function PageHeader({
   title,
   text,

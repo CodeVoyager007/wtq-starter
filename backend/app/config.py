@@ -1,4 +1,4 @@
-"""All settings come from environment variables (backend/.env locally, dashboard on Render)."""
+"""Web server settings, from environment variables (backend/.env). Model settings live in bill_decoder.config."""
 import os
 
 from dotenv import load_dotenv
@@ -6,25 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def env(name: str, default: str = "") -> str:
+def _env(name: str, default: str) -> str:
     return os.getenv(name, default).strip()
 
 
-# Same settings as the bill_decoder pipeline (MODEL_NAME, API_KEY, API_KEY_BACKUP).
-# Only competition-allowed models: anything else is refused before any call.
-from bill_decoder.config import ALLOWED_MODELS  # noqa: E402
+FRONTEND_ORIGINS = [o.strip() for o in _env("FRONTEND_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 
-GEMINI_KEYS = [k for k in (env("API_KEY"), env("API_KEY_BACKUP")) if k]
-GEMINI_MODEL = env("MODEL_NAME", "gemini-3.5-flash-lite")
-if GEMINI_MODEL not in ALLOWED_MODELS["google"]:
-    raise RuntimeError(f"MODEL_NAME '{GEMINI_MODEL}' is not an allowed model: {sorted(ALLOWED_MODELS['google'])}")
-
-# Comma separated list of allowed frontend origins (Vercel previews are allowed by regex in main.py).
-FRONTEND_ORIGINS = [
-    o.strip() for o in env("FRONTEND_ORIGINS", "http://localhost:3000").split(",") if o.strip()
-]
-
-
-def mock_mode() -> bool:
-    """LLM_MOCK=1 makes every LLM call return a canned answer. For tests and UI work with no key."""
-    return env("LLM_MOCK") == "1"
+MAX_UPLOAD_BYTES = int(_env("MAX_UPLOAD_MB", "10")) * 1024 * 1024
+MAX_QUESTION_CHARS = 500
+# The model allows ~15 requests/min on the free tier and a decode uses 2-3, so a few at a time is the real limit.
+MAX_CONCURRENT_DECODES = int(_env("MAX_CONCURRENT_DECODES", "3"))
+DECODE_WAIT_SECONDS = 20  # how long a request waits for a free slot before getting "busy"
+DECODES_PER_IP_PER_MINUTE = int(_env("DECODES_PER_IP_PER_MINUTE", "5"))
+MAX_STORED_BILLS = 100  # decoded bills kept in memory for follow-up questions (oldest dropped first)

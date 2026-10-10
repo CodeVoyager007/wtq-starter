@@ -1,6 +1,4 @@
-/**
- * EVENT DAY: edit the text in this file first (10 minutes), the pages read everything from here.
- */
+/** Site text and settings. The pages read everything from here. */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 /**
@@ -48,53 +46,3 @@ export const siteConfig = {
   stack: ["Next.js", "Tailwind CSS", "FastAPI", "Python", "Pillow", "Gemini 3.5 Flash-Lite"],
   team: "Made by Ayesha Mughal",
 };
-
-export type ModeId = "analyze" | "docs" | "extract" | "classify" | "predict" | "custom";
-
-export const modes: {
-  id: ModeId;
-  label: string;
-  hint: string;
-  placeholder: string;
-  needs?: "dataset" | "docs";
-}[] = [
-  {
-    id: "analyze",
-    label: "Analyze data",
-    hint: "Ask a question about your table in plain English.",
-    placeholder: "Which city has the slowest average response time?",
-    needs: "dataset",
-  },
-  {
-    id: "docs",
-    label: "Ask documents",
-    hint: "Ask about the text files or PDFs you uploaded. Answers come with sources.",
-    placeholder: "What is the refund policy?",
-    needs: "docs",
-  },
-  {
-    id: "extract",
-    label: "Extract fields",
-    hint: "Pull structured fields out of messy text (paste text, or name a text column).",
-    placeholder: "Paste some text here...",
-  },
-  {
-    id: "classify",
-    label: "Classify text",
-    hint: "Sort text into your own labels (paste text, or name a text column).",
-    placeholder: "Paste some text here...",
-  },
-  {
-    id: "predict",
-    label: "Predict",
-    hint: "Train a quick model to predict one column from the others.",
-    placeholder: "",
-    needs: "dataset",
-  },
-  {
-    id: "custom",
-    label: "Custom",
-    hint: "Runs solve_challenge() in backend/app/custom.py. Your own logic goes there.",
-    placeholder: "Type your input...",
-  },
-];
