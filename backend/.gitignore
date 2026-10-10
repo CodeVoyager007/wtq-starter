@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Bill decoder runtime files
+.cache/
+output/
+submission.zip
+data/test/

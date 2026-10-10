@@ -76,6 +76,8 @@ packaging==26.3
     # via pytest
 pandas==3.0.6
     # via wtq-backend
+pillow==12.3.0
+    # via wtq-backend
 pluggy==1.6.0
     # via pytest
 pyasn1==0.6.4

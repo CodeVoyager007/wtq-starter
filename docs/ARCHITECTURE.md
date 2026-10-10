@@ -49,7 +49,7 @@ Takeaways:
         |                    |                          |
         v                    v                          v
 +----------------+   +-------------------+    +---------------------+
-| pipeline.py    |   | qa.py  (Level 2)  |    | csv_io.py           |
+| pipeline.py    |   | answer.py (L2)    |    | csv_io.py           |
 | per bill:      |   | facts + image +   |    | read templates,     |
 |  image ->      |-->| 12 questions ->   |--->| keep order, write   |
 |  extract ->    |   | answers with      |    | one-line JSON, UTF-8|
@@ -84,7 +84,7 @@ frontend can call the same code later):
 | `normalize.py` | Numbers (`Rs. 19,964` to 19964, `38209CR` to -38209), dates, enum mapping, drop zero lines, provider from file name, highest late amount, strip PII keys | no |
 | `validate.py` | Consistency checks, return a list of issues | no |
 | `calc.py` | AST-based evaluator: numbers, + - * / ( ), `sum`, `avg`, `min`, `max`, `round`, `abs` | no |
-| `qa.py` | Level 2: one call per bill for all 12 questions, evaluate calcs, render text | yes |
+| `answer.py` | Level 2: one call per bill for all 12 questions, evaluate calcs, render text | yes |
 | `csv_io.py` | Template in, completed CSV out, never drop or reorder rows | no |
 | `evaluate.py` | Score Level 1 against ground truth (exact text, numbers ±1) | no |
 | `package.py` | Check outputs, build the submission ZIP, size check, secret scan | no |

@@ -1,0 +1,12 @@
+How much of my bill is taxes?
+How many months in my history went above 200 units?
+What is the average monthly consumption over the bill history?
+How much more will I pay if I pay after the due date?
+What is my effective cost per unit for this month, including taxes?
+Is there any subsidy or credit on this bill, and how much?
+How much did my consumption change compared to the same month last year?
+What is my sanctioned load and tariff?
+Estimate my bill next month if I use the same number of units.
+What is the highest bill in my history and in which month?
+What is the fuel price adjustment on this bill?
+Do I owe anything from previous months?
