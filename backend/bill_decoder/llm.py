@@ -117,7 +117,7 @@ class Client:
             except Exception as exc:  # SDK raises several error types; classify by message
                 last_error = exc
                 message = str(exc)
-                if any(code in message for code in ("400", "INVALID_ARGUMENT", "401", "403", "PERMISSION_DENIED")):
+                if any(code in message for code in ("400", "INVALID_ARGUMENT", "401", "403", "PERMISSION_DENIED", "404", "NOT_FOUND")):
                     raise LLMError(f"request rejected: {message[:300]}") from exc
                 if "429" in message or "RESOURCE_EXHAUSTED" in message:
                     self._rotate_key()
