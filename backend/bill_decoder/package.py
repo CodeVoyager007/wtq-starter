@@ -12,7 +12,7 @@ from .schema import LEVEL1_FIELDS
 MAX_ZIP_BYTES = 15 * 1024 * 1024
 SKIP_DIRS = {".git", ".venv", "node_modules", ".next", "__pycache__", ".pytest_cache", ".ruff_cache",
              "output", "test", ".claude"}
-SKIP_FILES = {".env", ".DS_Store"}
+SKIP_FILES = {".env", ".DS_Store", ".gitattributes", ".gitignore", ".python-version"}  # portal rejects git/tool dotfiles
 SKIP_SUFFIXES = {".zip", ".pyc"}
 BILL_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
 BINARY_SUFFIXES = BILL_IMAGE_SUFFIXES | {".ico", ".gif", ".mp4", ".mov", ".webm", ".exe", ".dll", ".so", ".whl"}
